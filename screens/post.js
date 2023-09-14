@@ -4,7 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Divider } from 'react-native-paper';
 import { Controller, useForm } from 'react-hook-form';
 import { resetForm } from '../layouts/tabLayout';
-import * as ImagePicker from 'react-native-image-picker';
+// import * as ImagePicker from 'react-native-image-picker';
 
 export default function PostScreen() {
 
@@ -35,13 +35,13 @@ export default function PostScreen() {
     };
 
     const handelImage = () => {
-        const cameraOptions = {
-            mediaType: 'photo'
-        }
-        async function cameraHandel() {
-            const result = await ImagePicker.launchCamera(cameraOptions);
-        }
-        cameraHandel().then(console.log(res => 'uploaded: ' + res)).catch( err =>console.log('failed to upload: ' + err))
+        // const cameraOptions = {
+        //     mediaType: 'photo'
+        // }
+        // async function cameraHandel() {
+        //     const result = await ImagePicker.launchCamera(cameraOptions);
+        // }
+        // cameraHandel().then(console.log(res => 'uploaded: ' + res)).catch( err =>console.log('failed to upload: ' + err))
         return console.log('pressed!');
     }
 
