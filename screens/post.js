@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Divider } from 'react-native-paper';
 import { Controller, useForm } from 'react-hook-form';
 import { resetForm } from '../layouts/tabLayout';
+import * as ImagePicker from 'react-native-image-picker';
 
 export default function PostScreen() {
 
@@ -16,9 +17,6 @@ export default function PostScreen() {
             price: ''
         }
     });
-    const onSubmit = data => {
-        console.log(data);
-    };
 
     React.useEffect(() => {
         if (resetData) {
@@ -32,15 +30,32 @@ export default function PostScreen() {
         }
     }, [resetData])
 
+    const onSubmit = data => {
+        console.log(data);
+    };
+
+    const handelImage = () => {
+        const cameraOptions = {
+            mediaType: 'photo'
+        }
+        async function cameraHandel() {
+            const result = await ImagePicker.launchCamera(cameraOptions);
+        }
+        cameraHandel().then(console.log(res => 'uploaded: ' + res)).catch( err =>console.log('failed to upload: ' + err))
+        return console.log('pressed!');
+    }
+
     return (
         <>
             <View style={styles.wrapper}>
                 <View style={styles.post}>
                     <View style={styles.postContainer}>
-                        <View style={styles.postContainerAddPhoto}>
-                            <MaterialCommunityIcons name="camera-enhance" size={38} color="black" />
-                            <Text>Add a Photo</Text>
-                        </View>
+                        <TouchableHighlight activeOpacity={0.9} underlayColor="#DDDDDD" onPress={handelImage}>
+                            <View style={styles.postContainerAddPhoto}>
+                                <MaterialCommunityIcons name="camera-enhance" size={42} color="#c2616b" />
+                                <Text style={styles.postContainerAddPhotoText}>Add a Photo</Text>
+                            </View>
+                        </TouchableHighlight>
                         <Divider style={styles.divider} />
                         <ScrollView contentContainerStyle={styles.containerStyle}>
                             <View style={styles.postContainerForm}>
@@ -125,6 +140,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         flexBasis: `${30}%`,
+    },
+
+    postContainerAddPhotoText: {
+        fontSize: 18,
+        color: '#c2616b'
     },
 
     postContainerForm: {
