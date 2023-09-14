@@ -1,8 +1,7 @@
 {
   "expo": {
-    
     "name": "Gumtree-app-remake",
-    "slug": "Gumtree-app-remake",
+    "slug": "gumtree-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,17 +15,24 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.oussama02.gumtreeapp"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
-      
+      },
+      "package": "com.oussama02.gumtreeapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "fca01b74-8ab2-4449-a719-a44ffd13737c"
+      }
+    },
+    "owner": "oussama02"
   }
 }

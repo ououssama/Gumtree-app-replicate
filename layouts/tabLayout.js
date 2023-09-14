@@ -11,9 +11,11 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HeaderLayout from './headerLayout';
 
 const Tab = createBottomTabNavigator();
+export const resetForm = React.createContext({resetData: true, setResetData : () => {}})
 
 export default function TabLayout() {
-
+  const [resetData, setResetData] = React.useState(false)
+  const chunk = {resetData, setResetData}
   const platformOs = 'android' || 'ios'
 
   return (
@@ -24,7 +26,7 @@ export default function TabLayout() {
           position: 'relative'
         },
         header: ({ navigation, route, options }) => {
-          return <HeaderLayout headerStyle={options.headerStyle} option = {route.name} navigation={navigation} />
+          return <resetForm.Provider value={chunk}><HeaderLayout headerStyle={options.headerStyle} option = {route.name} navigation={navigation} /></resetForm.Provider>
 
         },
         headerStyle: {
@@ -79,7 +81,7 @@ export default function TabLayout() {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
-      <Tab.Screen name="Post" component={PostScreen} options={{ tabBarLabel: '', tabBarHideOnKeyboard:true }} />
+      <Tab.Screen name="Post" children={() => <resetForm.Provider value={chunk}><PostScreen /></resetForm.Provider>} options={{ tabBarLabel: '', tabBarHideOnKeyboard:true }} />
       <Tab.Screen name="Saved" component={SavedScreen} />
       <Tab.Screen name="Message" component={MessageScreen} />
     </Tab.Navigator>
