@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Platform, StyleSheet, Text, TextInput, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons';
-import { resetForm } from './tabLayout';
+import { resetForm } from '../features/resetFormContext';
 
 export default function HeaderLayout({option, navigation, headerStyle}) {
     const{setResetData} = React.useContext(resetForm)

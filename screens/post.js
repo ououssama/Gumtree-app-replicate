@@ -1,14 +1,17 @@
 import * as React from 'react'
-import { ScrollView, StyleSheet, Text, TextInput, TouchableHighlight, View } from 'react-native'
+import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableHighlight, View } from 'react-native'
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Divider } from 'react-native-paper';
 import { Controller, useForm } from 'react-hook-form';
-import { resetForm } from '../layouts/tabLayout';
-// import * as ImagePicker from 'react-native-image-picker';
+import { resetForm } from '../features/resetFormContext';
+import * as ImagePicker from 'expo-image-picker';
+
 
 export default function PostScreen() {
 
-    const{resetData, setResetData} = React.useContext(resetForm)
+    const [status, requestPermission] = ImagePicker.useCameraPermissions();
+    const [image, setImage] = React.useState(null)
+    const { resetData, setResetData } = React.useContext(resetForm)
     const { register, setValue, handleSubmit, control, reset, formState: { errors } } = useForm({
         defaultValues: {
             title: '',
@@ -34,26 +37,36 @@ export default function PostScreen() {
         console.log(data);
     };
 
-    const handelImage = () => {
-        // const cameraOptions = {
-        //     mediaType: 'photo'
-        // }
-        // async function cameraHandel() {
-        //     const result = await ImagePicker.launchCamera(cameraOptions);
-        // }
-        // cameraHandel().then(console.log(res => 'uploaded: ' + res)).catch( err =>console.log('failed to upload: ' + err))
-        return console.log('pressed!');
-    }
+    const pickImage = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+
+        console.log(result);
+
+        if (!result.canceled) {
+            setImage(result.assets[0].uri);
+        }
+    };
 
     return (
         <>
             <View style={styles.wrapper}>
                 <View style={styles.post}>
                     <View style={styles.postContainer}>
-                        <TouchableHighlight activeOpacity={0.9} underlayColor="#DDDDDD" onPress={handelImage}>
+                        <TouchableHighlight activeOpacity={0.9} underlayColor="#DDDDDD" onPress={pickImage}>
                             <View style={styles.postContainerAddPhoto}>
-                                <MaterialCommunityIcons name="camera-enhance" size={42} color="#c2616b" />
-                                <Text style={styles.postContainerAddPhotoText}>Add a Photo</Text>
+                                {image ?
+                                    <Image source={{ uri: image }} style={{ width: 180, height: 180 }} />
+                                    :
+                                    <>
+                                        <MaterialCommunityIcons name="camera-enhance" size={42} color="#c2616b" />
+                                        <Text style={styles.postContainerAddPhotoText}>Add a Photo</Text>
+                                    </>
+                                }
                             </View>
                         </TouchableHighlight>
                         <Divider style={styles.divider} />
@@ -69,7 +82,7 @@ export default function PostScreen() {
                                 />
                                 <Controller
                                     control={control}
-                                    rules={{ required: true, maxLength:100 }}
+                                    rules={{ required: true, maxLength: 100 }}
                                     render={({ field: { onChange, value } }) =>
                                         <TextInput style={[styles.postContainerFormInput, styles.postContainerFormInputDesc]} onChangeText={onChange} value={value} placeholder='Description' placeholderTextColor={'gray'} multiline numberOfLines={7} />
                                     }

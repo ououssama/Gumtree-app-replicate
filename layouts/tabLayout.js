@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { Platform, StyleSheet, Text, TextInput, View } from 'react-native'
 import { FontAwesome5, FontAwesome, Ionicons } from '@expo/vector-icons';
-
 import HomeScreen from '../screens/home';
 import ProfileScreen from '../screens/profile';
 import PostScreen from '../screens/post';
@@ -9,9 +8,11 @@ import SavedScreen from '../screens/saved';
 import MessageScreen from '../screens/message';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HeaderLayout from './headerLayout';
+// import ImagePickerExample from '../screens/test';
+import { resetForm } from '../features/resetFormContext';
+import LoginScreen from '../screens/auth/login';
 
 const Tab = createBottomTabNavigator();
-export const resetForm = React.createContext({resetData: true, setResetData : () => {}})
 
 export default function TabLayout() {
   const [resetData, setResetData] = React.useState(false)
@@ -74,7 +75,7 @@ export default function TabLayout() {
         headerShown: true,
         tabBarStyle: {
           height: 70,
-          display: route.name === 'Post' ? 'none' : 'flex',
+          display: route.name === 'Post' || route.name === 'Login' ? 'none' : 'flex',
         },
 
       })}
@@ -84,6 +85,8 @@ export default function TabLayout() {
       <Tab.Screen name="Post" children={() => <resetForm.Provider value={chunk}><PostScreen /></resetForm.Provider>} options={{ tabBarLabel: '', tabBarHideOnKeyboard:true }} />
       <Tab.Screen name="Saved" component={SavedScreen} />
       <Tab.Screen name="Message" component={MessageScreen} />
+      <Tab.Screen name="Login" component={LoginScreen} />
+      {/* <Tab.Screen name="test" component={ImagePickerExample} /> */}
     </Tab.Navigator>
   )
 }
