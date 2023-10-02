@@ -11,6 +11,7 @@ import HeaderLayout from './headerLayout';
 // import ImagePickerExample from '../screens/test';
 import { resetForm } from '../features/resetFormContext';
 import LoginScreen from '../screens/auth/login';
+import UserGate from '../screens/auth/userGate';
 
 const Tab = createBottomTabNavigator();
 
@@ -84,7 +85,7 @@ export default function TabLayout() {
       <Tab.Screen name="Profile" component={ProfileScreen} />
       <Tab.Screen name="Post" children={() => <resetForm.Provider value={chunk}><PostScreen /></resetForm.Provider>} options={{ tabBarLabel: '', tabBarHideOnKeyboard:true }} />
       <Tab.Screen name="Saved" component={SavedScreen} />
-      <Tab.Screen name="Message" component={MessageScreen} />
+      <Tab.Screen name="Message" children={({navigation}) => <UserGate navigation={navigation}><MessageScreen /></UserGate>} />
       <Tab.Screen name="Login" component={LoginScreen} />
       {/* <Tab.Screen name="test" component={ImagePickerExample} /> */}
     </Tab.Navigator>
