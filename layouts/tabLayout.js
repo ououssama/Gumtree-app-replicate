@@ -12,12 +12,14 @@ import HeaderLayout from './headerLayout';
 import { resetForm } from '../features/resetFormContext';
 import LoginScreen from '../screens/auth/login';
 import UserGate from '../screens/auth/userGate';
+import { useSelector } from 'react-redux';
 
 const Tab = createBottomTabNavigator();
 
 export default function TabLayout() {
   const [resetData, setResetData] = React.useState(false)
-  const chunk = {resetData, setResetData}
+  const { isLogged } = useSelector(state => state.userData)
+  const chunk = { resetData, setResetData }
   const platformOs = 'android' || 'ios'
 
   return (
@@ -27,8 +29,10 @@ export default function TabLayout() {
         tabBarStyle: {
           position: 'relative'
         },
+
+
         header: ({ navigation, route, options }) => {
-          return <resetForm.Provider value={chunk}><HeaderLayout headerStyle={options.headerStyle} option = {route.name} navigation={navigation} /></resetForm.Provider>
+          return <resetForm.Provider value={chunk}><HeaderLayout headerStyle={options.headerStyle} option={route.name} navigation={navigation} /></resetForm.Provider>
 
         },
         headerStyle: {
@@ -76,17 +80,18 @@ export default function TabLayout() {
         headerShown: true,
         tabBarStyle: {
           height: 70,
-          display: route.name === 'Post' || route.name === 'Login' ? 'none' : 'flex',
+          display: route.name === 'Post'|| route.name === 'Login' ? 'none' : 'flex',
         },
 
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
-      <Tab.Screen name="Post" children={() => <resetForm.Provider value={chunk}><PostScreen /></resetForm.Provider>} options={{ tabBarLabel: '', tabBarHideOnKeyboard:true }} />
+      <Tab.Screen name="Post" children={() => <resetForm.Provider value={chunk}><PostScreen /></resetForm.Provider>} options={{ tabBarLabel: '', tabBarHideOnKeyboard: true }} />
       <Tab.Screen name="Saved" component={SavedScreen} />
-      <Tab.Screen name="Message" children={({navigation}) => <UserGate navigation={navigation}><MessageScreen /></UserGate>} />
-      <Tab.Screen name="Login" component={LoginScreen} />
+      <Tab.Screen name="Message" children={({ navigation }) =>  <UserGate navigation={navigation}><MessageScreen /></UserGate>} />
+      <Tab.Screen name="Login" component={LoginScreen} options={{ tabBarButton: () => (null) }} />
+
       {/* <Tab.Screen name="test" component={ImagePickerExample} /> */}
     </Tab.Navigator>
   )

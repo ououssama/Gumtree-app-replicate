@@ -4,7 +4,7 @@ import { StyleSheet, Text, TextInput, TouchableHighlight, TouchableNativeFeedbac
 import { connect } from 'react-redux'
 import { loginUser } from '../../features/redux/userSlice'
 import { Snackbar } from 'react-native-paper'
-
+import {app} from '../../firebase/firebase.js'
 
 function LoginScreen({ navigation, user_data, loginUser }) {
     const { register, setValue, handleSubmit, control, reset, formState: { errors } } = useForm({

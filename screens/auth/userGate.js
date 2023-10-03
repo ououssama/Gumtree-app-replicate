@@ -1,17 +1,18 @@
-import { useState } from 'react';
+import { useIsFocused } from '@react-navigation/native';
+import { useEffect } from 'react';
+import { Text } from 'react-native';
+import { render } from 'react-native';
 import { connect } from 'react-redux'
 
-function UserGate({navigation, children, userStatus }) {
-    const [user, setuser] = useState(userStatus)
-    console.log(navigation);
-    if (!user) {
-        console.log(user);
-        return navigation.navigate('Login')
-    }
-    else {
-        console.log(user);
-        return children
-    }
+function UserGate({navigation, userStatus, children }) {
+
+    const isFocused = useIsFocused()
+    
+    useEffect(() => {
+        isFocused && !userStatus&& navigation.navigate('Login')
+    },[isFocused])
+
+    return isFocused && userStatus && children
 }
 
 const mapStateToProps = (state) => {

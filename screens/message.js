@@ -16,6 +16,7 @@ const messages =
     ]
 
 export default function MessageScreen() {
+    console.log('Message screen');
     return (
         <>
             <View style={styles.wrapper}>
