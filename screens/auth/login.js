@@ -4,9 +4,10 @@ import { StyleSheet, Text, TextInput, TouchableHighlight, TouchableNativeFeedbac
 import { connect } from 'react-redux'
 import { loginUser } from '../../features/redux/userSlice'
 import { Snackbar } from 'react-native-paper'
-import {app} from '../../firebase/firebase.js'
+import {auth} from '../../firebase/firebase.js'
+import { userLoginAction } from '../../features/redux/userActions'
 
-function LoginScreen({ navigation, user_data, loginUser }) {
+function LoginScreen({ navigation, user_data, loginUser, userLoginAction }) {
     const { register, setValue, handleSubmit, control, reset, formState: { errors } } = useForm({
         defaultValues: {
             email: '',
@@ -26,7 +27,12 @@ function LoginScreen({ navigation, user_data, loginUser }) {
             console.log('Invalid password')
             setVisible(true)
         } else {
-            loginUser({ user_data })
+            // userLoginAction(user_data)
+            auth.createUserWithEmailAndPassword(data.email, data.password).then(
+                   res => console.log(res)
+            ).catch(
+                err => console.log(err)
+            )
             navigation.goBack()
             console.log('logged!');
         }
@@ -97,7 +103,8 @@ const mapStateToProps = (state) => {
 }
 
 const mapDispatchToProps = {
-    loginUser
+    loginUser,
+    userLoginAction
 }
 
 const styles = StyleSheet.create({

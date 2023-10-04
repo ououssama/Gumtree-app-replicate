@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { userLoginAction } from "./userActions";
 
 const initialState = {
     email: 'oussama@gmail.com',
@@ -15,7 +16,30 @@ export const userSlice = createSlice({
             state.password = payload.password
             state.isLogged = true
         }
+    },
+
+    extraReducers: builder => {
+        builder.addCase(userLoginAction.pending, (state) => {
+            console.log('pending: ', state);
+        })
+        builder.addCase(userLoginAction.fulfilled, (state, {payload}) => {
+            console.log('fulfilled: ',payload);
+        })
+        builder.addCase(userLoginAction.rejected, (state, {payload}) => {
+            cconsole.log('rejected: ',payload);
+        })
+
     }
+        // [userLoginAction.pending]: (state) => {
+        //     console.log('pending: ', state);
+        // },
+        // [userLoginAction.fulfilled]: (state, {payload}) => {
+        //     console.log('fulfilled: ',payload);
+        // },
+        // [userLoginAction.rejected]: (state, {payload}) => {
+        //     console.log('rejected: ',payload);
+        // }
+    
 })
 
 export const {loginUser} = userSlice.actions
