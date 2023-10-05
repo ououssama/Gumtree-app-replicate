@@ -4,10 +4,11 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Divider } from 'react-native-paper';
 import { Controller, useForm } from 'react-hook-form';
 import { resetForm } from '../features/resetFormContext';
+import { Connect, connect } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
 
 
-export default function PostScreen() {
+function PostScreen({navigation, user_data}) {
 
     const [status, requestPermission] = ImagePicker.useCameraPermissions();
     const [image, setImage] = React.useState(null)
@@ -34,7 +35,11 @@ export default function PostScreen() {
     }, [resetData])
 
     const onSubmit = data => {
-        console.log(data);
+        if (!user_data.isLogged) {
+            navigation.navigate('Login')
+        } else {
+            console.log(data);
+        }
     };
 
     const pickImage = async () => {
@@ -126,6 +131,13 @@ export default function PostScreen() {
             </View>
         </>
     )
+}
+
+const mapStateToProps = (state) => {
+    const {userData} = state
+    return {
+        user_data: userData
+    }
 }
 
 const styles = StyleSheet.create({
@@ -238,3 +250,5 @@ const styles = StyleSheet.create({
         fontSize: 18
     }
 })
+
+export default connect(mapStateToProps)(PostScreen)

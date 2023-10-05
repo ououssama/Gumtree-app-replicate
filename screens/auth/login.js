@@ -29,9 +29,8 @@ function LoginScreen({ navigation, user_data, loginUser, userLoginAction }) {
             .then((userCredential) => {
                 // Signed up 
                 const user = userCredential.user;
+                loginUser(user)
                 navigation.goBack()
-                console.log('logged!');
-                console.log(user)
             })
             .catch((error) => {
                 const errorCode = error.code;

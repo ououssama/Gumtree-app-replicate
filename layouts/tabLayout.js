@@ -88,9 +88,9 @@ export default function TabLayout() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
-      <Tab.Screen name="Post" children={() => <resetForm.Provider value={chunk}><PostScreen /></resetForm.Provider>} options={{ tabBarLabel: '', tabBarHideOnKeyboard: true }} />
-      <Tab.Screen name="Saved" component={SavedScreen} />
+      <Tab.Screen name="Profile" children={({ navigation }) =>  <UserGate navigation={navigation}><ProfileScreen/></UserGate>} />
+      <Tab.Screen name="Post" children={({ navigation }) => <resetForm.Provider value={chunk}><PostScreen navigation={navigation} /></resetForm.Provider>} options={{ tabBarLabel: '', tabBarHideOnKeyboard: true }} />
+      <Tab.Screen name="Saved" children={({ navigation }) =>  <UserGate navigation={navigation}><SavedScreen/></UserGate>} />
       <Tab.Screen name="Message" children={({ navigation }) =>  <UserGate navigation={navigation}><MessageScreen /></UserGate>} />
       <Tab.Screen name="Login" component={LoginScreen} options={{ tabBarButton: () => (null) }} />
       <Tab.Screen name="Register" component={RegisterScreen} options={{ tabBarButton: () => (null) }} />

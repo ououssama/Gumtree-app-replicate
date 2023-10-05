@@ -26,7 +26,7 @@ export const userSlice = createSlice({
             console.log('fulfilled: ',payload);
         })
         builder.addCase(userLoginAction.rejected, (state, {payload}) => {
-            cconsole.log('rejected: ',payload);
+            cconsole.log('rejected: ',state);
         })
 
     }

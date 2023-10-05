@@ -4,17 +4,15 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 
 export const userLoginAction = createAsyncThunk(
     "auth/login",
-    async (data, { rejectWithValue }) => {
+    async (data, thunkAPI) => {
         try {
-            const signin = await signInWithEmailAndPassword(auth, data.email, data.password)
-            if (signin.user.uid != null) {
-                return signin.user
-            }
+            const signin = await signInWithEmailAndPassword(auth, data.email, data.password);
+            return signin.user
             // const userCredential = signin.user
             // return userCredential
-        } catch (err) {
-            return rejectWithValue(err.code)
-            // rejectWithValue(err.code)
+        } catch (error) {
+            return thunkAPI.rejectWithValue(error.message)
+            
         }
            
     }
