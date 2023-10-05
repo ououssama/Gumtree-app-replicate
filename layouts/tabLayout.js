@@ -13,6 +13,7 @@ import { resetForm } from '../features/resetFormContext';
 import LoginScreen from '../screens/auth/login';
 import UserGate from '../screens/auth/userGate';
 import { useSelector } from 'react-redux';
+import RegisterScreen from '../screens/auth/register';
 
 const Tab = createBottomTabNavigator();
 
@@ -21,6 +22,7 @@ export default function TabLayout() {
   const { isLogged } = useSelector(state => state.userData)
   const chunk = { resetData, setResetData }
   const platformOs = 'android' || 'ios'
+  const tablessRoute = ['Post', 'Login', 'Register']
 
   return (
     <Tab.Navigator
@@ -66,7 +68,7 @@ export default function TabLayout() {
           else if (route.name === 'Message') {
             iconName = focused ? 'ios-chatbubble' : 'ios-chatbubble-outline';
           }
-
+          
           // You can return any component that you like here!
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -80,7 +82,7 @@ export default function TabLayout() {
         headerShown: true,
         tabBarStyle: {
           height: 70,
-          display: route.name === 'Post'|| route.name === 'Login' ? 'none' : 'flex',
+          display: tablessRoute.includes(route.name) ? 'none' : 'flex',
         },
 
       })}
@@ -91,6 +93,7 @@ export default function TabLayout() {
       <Tab.Screen name="Saved" component={SavedScreen} />
       <Tab.Screen name="Message" children={({ navigation }) =>  <UserGate navigation={navigation}><MessageScreen /></UserGate>} />
       <Tab.Screen name="Login" component={LoginScreen} options={{ tabBarButton: () => (null) }} />
+      <Tab.Screen name="Register" component={RegisterScreen} options={{ tabBarButton: () => (null) }} />
 
       {/* <Tab.Screen name="test" component={ImagePickerExample} /> */}
     </Tab.Navigator>

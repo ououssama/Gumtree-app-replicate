@@ -2,8 +2,8 @@ import { createSlice } from "@reduxjs/toolkit";
 import { userLoginAction } from "./userActions";
 
 const initialState = {
-    email: 'oussama@gmail.com',
-    password: '123456',
+    email: '',
+    password: '',
     isLogged: false
 }
 

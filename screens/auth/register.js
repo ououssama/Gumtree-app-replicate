@@ -5,16 +5,26 @@ import { connect } from 'react-redux'
 import { loginUser } from '../../features/redux/userSlice'
 import { Snackbar } from 'react-native-paper'
 import { auth } from '../../firebase/firebase.js'
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { userLoginAction } from '../../features/redux/userActions'
+import { useEffect } from 'react'
+import { useIsFocused } from '@react-navigation/native'
 
-function LoginScreen({ navigation, user_data, loginUser, userLoginAction }) {
+export default function RegisterScreen({ navigation }) {
     const { register, setValue, handleSubmit, control, reset, formState: { errors } } = useForm({
         defaultValues: {
+            firstname: '',
+            lastname: '',
             email: '',
             password: '',
         }
     });
+
+    const isBlured = !useIsFocused()
+
+    useEffect(() => {
+        isBlured && reset()
+    },[isBlured])
 
     const [visible, setVisible] = React.useState({
         state: false,
@@ -25,23 +35,23 @@ function LoginScreen({ navigation, user_data, loginUser, userLoginAction }) {
 
     const onSubmit = data => {
 
-        signInWithEmailAndPassword(auth, data.email, data.password)
+        createUserWithEmailAndPassword(auth, data.email, data.password)
             .then((userCredential) => {
                 // Signed up 
                 const user = userCredential.user;
                 navigation.goBack()
-                console.log('logged!');
+                console.log('Registred!');
                 console.log(user)
             })
             .catch((error) => {
                 const errorCode = error.code;
                 const errorMessage = error.message;
+                console.log(errorCode);
                 switch (errorCode) {
-                    case 'auth/invalid-login-credentials':
-                        setVisible({state: true, value: 'Incorrect Email or Password'})
+                    case 'auth/email-already-in-use':
+                        setVisible({state: true, value: `An account with email address ${data.email} already exists, Please login using this email address or reset the password.`})
                         console.log(visible);
                     default:
-                        setVisible({state: true, value: 'Come back in few minutes'})
                         console.log(errorCode);
                 }
             });
@@ -55,6 +65,28 @@ function LoginScreen({ navigation, user_data, loginUser, userLoginAction }) {
     return (
         <View style={{ height: `${100}%` }}>
             <View style={styles.ContainerForm}>
+                <Controller
+                    control={control}
+                    rules={{ required: 'First name required' }}
+                    render={({ field: { onChange, value } }) =>
+                        <>
+                            <TextInput style={styles.ContainerFormInput} onChangeText={onChange} value={value} placeholder='First name' placeholderTextColor={'gray'} />
+                            {errors?.firstname && <Text>{errors?.firstname?.message}</Text>}
+                        </>
+                    }
+                    name='firstname'
+                />
+                <Controller
+                    control={control}
+                    rules={{ required: 'Last name required' }}
+                    render={({ field: { onChange, value } }) =>
+                        <>
+                            <TextInput style={styles.ContainerFormInput} onChangeText={onChange} value={value} placeholder='Last name' placeholderTextColor={'gray'} />
+                            {errors?.lastname && <Text>{errors?.lastname?.message}</Text>}
+                        </>
+                    }
+                    name='lastname'
+                />
                 <Controller
                     control={control}
                     rules={{ required: 'Email required', pattern: { value: /^[A-Za-z0-9]+@gmail.com/, message: 'Invalid Email' } }}
@@ -73,17 +105,16 @@ function LoginScreen({ navigation, user_data, loginUser, userLoginAction }) {
                         <>
                             <TextInput style={styles.ContainerFormInput} onChangeText={onChange} value={value} placeholder='Password' placeholderTextColor={'gray'} />
                             {errors?.password && <Text>{errors?.password?.message}</Text>}
-                            <Text style={styles.ResetPasswordLinks}>I forgot the password</Text>
                         </>
                     }
                     name='password'
                 />
                 <View style={styles.ContainerFormButtonWrapper}>
                     <TouchableHighlight underlayColor={'#a5535b'} style={styles.ContainerFormSubmitButton} onPress={handleSubmit(onSubmit)} >
-                        <Text style={styles.ContainerFormSubmitButtonText}>Sign in</Text>
+                        <Text style={styles.ContainerFormSubmitButtonText}>Create account</Text>
                     </TouchableHighlight>
-                    <TouchableNativeFeedback style={styles.ContainerRegisterButton} onPress={() => navigation.navigate('Register')} >
-                        <Text style={styles.ContainerFormRegisterButtonText}>Register</Text>
+                    <TouchableNativeFeedback style={styles.ContainerRegisterButton} onPress={() => navigation.navigate('Login')} >
+                        <Text style={styles.ContainerFormRegisterButtonText}>Sign in</Text>
                     </TouchableNativeFeedback>
                 </View>
             </View>
@@ -102,13 +133,6 @@ function LoginScreen({ navigation, user_data, loginUser, userLoginAction }) {
             </Snackbar>
         </View>
     )
-}
-
-const mapStateToProps = (state) => {
-    const { userData } = state
-    return {
-        user_data: userData
-    }
 }
 
 const mapDispatchToProps = {
@@ -163,5 +187,3 @@ const styles = StyleSheet.create({
         textAlign: 'right'
     }
 })
-
-export default connect(mapStateToProps, mapDispatchToProps)(LoginScreen)
