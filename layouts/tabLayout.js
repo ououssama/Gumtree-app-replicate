@@ -14,6 +14,7 @@ import LoginScreen from '../screens/auth/login';
 import UserGate from '../screens/auth/userGate';
 import { useSelector } from 'react-redux';
 import RegisterScreen from '../screens/auth/register';
+import ListingCategory from '../screens/listingCategory';
 
 const Tab = createBottomTabNavigator();
 
@@ -22,7 +23,7 @@ export default function TabLayout() {
   const { isLogged } = useSelector(state => state.userData)
   const chunk = { resetData, setResetData }
   const platformOs = 'android' || 'ios'
-  const tablessRoute = ['Post', 'Login', 'Register']
+  const tablessRoute = ['Post', 'Categories', 'Login', 'Register']
 
   return (
     <Tab.Navigator
@@ -92,6 +93,7 @@ export default function TabLayout() {
       <Tab.Screen name="Post" children={({ navigation }) => <resetForm.Provider value={chunk}><PostScreen navigation={navigation} /></resetForm.Provider>} options={{ tabBarLabel: '', tabBarHideOnKeyboard: true }} />
       <Tab.Screen name="Saved" children={({ navigation }) =>  <UserGate navigation={navigation}><SavedScreen/></UserGate>} />
       <Tab.Screen name="Message" children={({ navigation }) =>  <UserGate navigation={navigation}><MessageScreen /></UserGate>} />
+      <Tab.Screen name="Categories" component={ListingCategory} options={{ tabBarButton: () => (null) }} />
       <Tab.Screen name="Login" component={LoginScreen} options={{ tabBarButton: () => (null) }} />
       <Tab.Screen name="Register" component={RegisterScreen} options={{ tabBarButton: () => (null) }} />
 

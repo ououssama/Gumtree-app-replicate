@@ -1,17 +1,22 @@
 import * as React from 'react'
-import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableHighlight, View } from 'react-native'
+import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableHighlight, View, TouchableOpacity } from 'react-native'
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Divider } from 'react-native-paper';
 import { Controller, useForm } from 'react-hook-form';
 import { resetForm } from '../features/resetFormContext';
 import { Connect, connect } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
+import { auth, db } from '../firebase/firebase';
+import { addDoc, collection, doc, getDocs, setDoc } from 'firebase/firestore';
 
 
-function PostScreen({navigation, user_data}) {
+function PostScreen({ navigation, user_data, categorie_data }) {
+
+    console.log(categorie_data);
 
     const [status, requestPermission] = ImagePicker.useCameraPermissions();
     const [image, setImage] = React.useState(null)
+    const [selectedCategorie, setSelectedCategory] = React.useState(categorie_data)
     const { resetData, setResetData } = React.useContext(resetForm)
     const { register, setValue, handleSubmit, control, reset, formState: { errors } } = useForm({
         defaultValues: {
@@ -21,6 +26,22 @@ function PostScreen({navigation, user_data}) {
             price: ''
         }
     });
+
+    React.useEffect(() => {
+        const getMessage = async () => {
+            const querySnapshot = await getDocs(collection(db, "Listing"));
+            querySnapshot.forEach((doc) => {
+                console.log(doc.data());
+            });
+        }
+        getMessage()
+    }, [])
+
+    React.useEffect(() => {
+        setSelectedCategory(categorie_data)
+        setValue('categorie', categorie_data.title)
+        console.log(selectedCategorie);
+    }, [categorie_data])
 
     React.useEffect(() => {
         if (resetData) {
@@ -34,11 +55,24 @@ function PostScreen({navigation, user_data}) {
         }
     }, [resetData])
 
-    const onSubmit = data => {
+    const onSubmit = async (data) => {
+        console.log('data ', data);
         if (!user_data.isLogged) {
             navigation.navigate('Login')
         } else {
-            console.log(data);
+            // Todo: we have to get user uid from redux store
+            const authUser = auth.currentUser.uid;
+            const createdDate = new Date();
+            try {
+                addDoc(collection(db, 'Listing'),
+                    {
+                        ...data,
+                        timestamp: createdDate,
+                        user_uid: authUser,
+                })            
+            } catch (err) {
+                console.error(err);
+            }
         }
     };
 
@@ -93,14 +127,20 @@ function PostScreen({navigation, user_data}) {
                                     }
                                     name='description'
                                 />
+
+
                                 <Controller
                                     control={control}
                                     rules={{ required: true }}
                                     render={({ field: { onChange, value } }) =>
-                                        <TextInput style={styles.postContainerFormInput} onChangeText={onChange} value={value} placeholder='Categorie' placeholderTextColor={'gray'} />
+                                        <>
+                                            <TouchableOpacity style={styles.postContainerFormInputNotSelected}><Text style={{ color: 'gray', fontSize: 18 }} onPress={() => navigation.jumpTo('Categories')}>{selectedCategorie.id !== null ? selectedCategorie.title : 'Category'}</Text></TouchableOpacity>
+                                            <TextInput style={styles.postContainerFormInputHidden} onChangeText={onChange} value={value} placeholder='Categorie' />
+                                        </>
                                     }
                                     name='categorie'
                                 />
+
 
                                 <Controller
                                     control={control}
@@ -134,9 +174,10 @@ function PostScreen({navigation, user_data}) {
 }
 
 const mapStateToProps = (state) => {
-    const {userData} = state
+    const { userData, categorieData } = state
     return {
-        user_data: userData
+        user_data: userData,
+        categorie_data: categorieData
     }
 }
 
@@ -181,6 +222,17 @@ const styles = StyleSheet.create({
         marginTop: 45,
         padding: 20,
         fontSize: 18,
+    },
+
+    postContainerFormInputHidden: {
+        height: 0,
+        width: 0
+    },
+
+    postContainerFormInputNotSelected: {
+        backgroundColor: 'white',
+        marginTop: 45,
+        padding: 20,
     },
 
     postContainerFormPrice: {

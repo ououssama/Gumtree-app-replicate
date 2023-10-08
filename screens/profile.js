@@ -1,9 +1,9 @@
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Divider } from 'react-native-paper';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { connect } from 'react-redux';
 
-
-export default function ProfileScreen() {
+function ProfileScreen({user_data}) {
     return (
         <>
             <View style={styles.wrapper}>
@@ -11,7 +11,7 @@ export default function ProfileScreen() {
                     <View style={styles.profileInfo}>
                         <Image style={styles.profileInfoImage} source={require('../assets/default-profile.png')} />
                         <View style={styles.profileInfoDetail}>
-                            <Text style={styles.profileInfoDetailName}>oussama</Text>
+                            <Text style={styles.profileInfoDetailName}>{user_data.email}</Text>
                             <Text style={styles.profileInfoDetailAds}>(0 ads)</Text>
                         </View>
                         <View style={styles.profileInfoState}>
@@ -98,6 +98,14 @@ export default function ProfileScreen() {
             </View>
         </>
     )
+}
+
+const mapStateToProps = (state) => {
+    const { userData } = state
+    
+    return {
+        user_data: userData
+    }
 }
 
 const styles = StyleSheet.create({
@@ -270,3 +278,5 @@ const styles = StyleSheet.create({
         color: '#c2616b',
     }
 })
+
+export default connect(mapStateToProps)(ProfileScreen)
