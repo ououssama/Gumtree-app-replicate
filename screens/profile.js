@@ -1,17 +1,27 @@
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Divider } from 'react-native-paper';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { connect } from 'react-redux';
 import { useEffect } from 'react';
 import { useState } from 'react';
-import { ref } from 'firebase/storage';
-import { db, storage } from '../firebase/firebase';
+import { getDownloadURL, ref } from 'firebase/storage';
+import { auth, db, storage } from '../firebase/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import moment from 'moment/moment';
+import { useRef } from 'react';
 
 function ProfileScreen({ user_data }) {
 
     const [listings, setListings] = useState([])
+    const fadeAnim = useRef(new Animated.Value(0)).current; // Initial value for opacity: 0
+
+    useEffect(() => {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 700,
+        useNativeDriver: true,
+      }).start();
+    }, [fadeAnim]);
 
     useEffect(() => {
         const getListings = async () => {
@@ -19,22 +29,39 @@ function ProfileScreen({ user_data }) {
             const querySnapshot = await getDocs(collection(db, "Listing"));
             querySnapshot.forEach((doc) => {
                 // console.log('listings: ', doc.data())
-                array = [...array, doc.data()]
+                const authUser = auth.currentUser.uid;
+                if (doc.data().user_uid === authUser) {
+                    const pathReference = ref(storage, `listings/images/${doc.data().image_name}`);
+                    getDownloadURL(pathReference).then((res) => {
+                        array = [...array, ({ ...doc.data(), uri: res })]
+                        console.log('l: ', array);
+                        setListings(array)
+                        
+                    }).catch((err) => {
+                        console.error(err);
+                    })
+                }
             });
-            setListings(array)
         }
 
         getListings()
 
         console.log('listings: ',listings);
 
-        const pathReference = ref(storage, 'images/stars.jpg');
-        console.log(pathReference);
+        // if (listings?.image_name) {
+        //     console.log(listings?.image_name);
+        //     const pathReference = ref(storage, `images/${listings.image_name}`);
+        //     getDownloadURL(pathReference).then((res) => {
+        //         console.log(res);
+        //     }).catch((err) => {
+        //         console.error(err);
+        //     })
+        // }
     }, [])
 
-    useEffect(() => {
-        console.log(listings);
-    }, [listings])
+    // useEffect(() => {
+    //     console.log(listings);
+    // }, [listings])
 
     return (
         <>
@@ -59,11 +86,11 @@ function ProfileScreen({ user_data }) {
                 </View>
                 <ScrollView contentContainerStyle={styles.userListing} >
                     <View style={styles.userListingWrapper}>
-                        {listings.map(listing => 
+                        {listings.map((listing, id) => 
                         
-                            <View style={styles.userListingItem}>
+                            <Animated.View key={id} style={[styles.userListingItem, {opacity: fadeAnim, }]}>
                                 <View style={styles.userListingItemInfo}>
-                                    <Image style={styles.userListingItemInfoImage} source={{ uri: 'https://picsum.photos/id/237/200/300' }} />
+                                    <Image style={styles.userListingItemInfoImage} source={{ uri: listing.uri }} />
                                     <View style={styles.userListingItemInfoContent}>
                                         <View style={styles.userListingItemInfoContentHeading}>
                                             <Text style={styles.userListingItemInfoContentHeadingTitle}>{ listing.title }</Text>
@@ -93,7 +120,7 @@ function ProfileScreen({ user_data }) {
                                     </View>
                                     <Text style={styles.userListingItemAnalyticsPromote}>Promote</Text>
                                 </View>
-                            </View>
+                            </Animated.View>
                         )
                         }
                     </View>
