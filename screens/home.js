@@ -58,7 +58,7 @@ export default function HomeScreen() {
   }
 
   React.useEffect(() => {
-    console.log(like);
+    console.log('likes',like);
   },[like])
 
   return (

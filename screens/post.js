@@ -4,10 +4,11 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Divider } from 'react-native-paper';
 import { Controller, useForm } from 'react-hook-form';
 import { resetForm } from '../features/resetFormContext';
-import { Connect, connect } from 'react-redux';
+import { connect } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
-import { auth, db } from '../firebase/firebase';
-import { addDoc, collection, doc, getDocs, setDoc } from 'firebase/firestore';
+import { auth, db, storage } from '../firebase/firebase';
+import { addDoc, collection } from 'firebase/firestore';
+import { ref, uploadBytes } from 'firebase/storage';
 
 
 function PostScreen({ navigation, user_data, categorie_data }) {
@@ -27,15 +28,34 @@ function PostScreen({ navigation, user_data, categorie_data }) {
         }
     });
 
-    React.useEffect(() => {
-        const getMessage = async () => {
-            const querySnapshot = await getDocs(collection(db, "Listing"));
-            querySnapshot.forEach((doc) => {
-                console.log(doc.data());
+    const handleImage = async (imagePath, imageName) => {
+        // Todo: handle image upload
+        const getBlobFroUri = async (uri) => {
+            const blob = await new Promise((resolve, reject) => {
+              const xhr = new XMLHttpRequest();
+              xhr.onload = function () {
+                resolve(xhr.response);
+              };
+              xhr.onerror = function (e) {
+                reject(new TypeError("Network request failed"));
+              };
+              xhr.responseType = "blob";
+              xhr.open("GET", uri, true);
+              xhr.send(null);
             });
-        }
-        getMessage()
-    }, [])
+          
+            return blob;
+        };
+
+        const blobImg = await getBlobFroUri(imagePath);
+
+        const postRef = ref(storage, `listings/images/${imageName}`)
+        uploadBytes(postRef, blobImg).then(snapshot => {
+            console.log('photo uploaded');
+        }).catch(error => {
+            console.log('there is a problem uploading the image');
+        })
+    }
 
     React.useEffect(() => {
         setSelectedCategory(categorie_data)
@@ -64,12 +84,14 @@ function PostScreen({ navigation, user_data, categorie_data }) {
             const authUser = auth.currentUser.uid;
             const createdDate = new Date();
             try {
+                handleImage(image.uri, image.name);    
                 addDoc(collection(db, 'Listing'),
                     {
                         ...data,
-                        timestamp: createdDate,
+                        created_at: createdDate,
                         user_uid: authUser,
-                })            
+                        image_name: image.name
+                    })
             } catch (err) {
                 console.error(err);
             }
@@ -84,10 +106,12 @@ function PostScreen({ navigation, user_data, categorie_data }) {
             quality: 1,
         });
 
-        console.log(result);
+        const imagePath = result.assets[0].uri 
+        const imageName = imagePath.split('/').pop()
+        console.log('image ',imageName);
 
         if (!result.canceled) {
-            setImage(result.assets[0].uri);
+            setImage({ uri: imagePath, name: imageName });
         }
     };
 
@@ -99,7 +123,7 @@ function PostScreen({ navigation, user_data, categorie_data }) {
                         <TouchableHighlight activeOpacity={0.9} underlayColor="#DDDDDD" onPress={pickImage}>
                             <View style={styles.postContainerAddPhoto}>
                                 {image ?
-                                    <Image source={{ uri: image }} style={{ width: 180, height: 180 }} />
+                                    <Image source={{ uri: image?.uri }} style={{ width: 180, height: 180 }} />
                                     :
                                     <>
                                         <MaterialCommunityIcons name="camera-enhance" size={42} color="#c2616b" />

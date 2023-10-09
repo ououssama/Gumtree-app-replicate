@@ -2,8 +2,40 @@ import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Divider } from 'react-native-paper';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { connect } from 'react-redux';
+import { useEffect } from 'react';
+import { useState } from 'react';
+import { ref } from 'firebase/storage';
+import { db, storage } from '../firebase/firebase';
+import { collection, getDocs } from 'firebase/firestore';
+import moment from 'moment/moment';
 
-function ProfileScreen({user_data}) {
+function ProfileScreen({ user_data }) {
+
+    const [listings, setListings] = useState([])
+
+    useEffect(() => {
+        const getListings = async () => {
+            let array = [];
+            const querySnapshot = await getDocs(collection(db, "Listing"));
+            querySnapshot.forEach((doc) => {
+                // console.log('listings: ', doc.data())
+                array = [...array, doc.data()]
+            });
+            setListings(array)
+        }
+
+        getListings()
+
+        console.log('listings: ',listings);
+
+        const pathReference = ref(storage, 'images/stars.jpg');
+        console.log(pathReference);
+    }, [])
+
+    useEffect(() => {
+        console.log(listings);
+    }, [listings])
+
     return (
         <>
             <View style={styles.wrapper}>
@@ -27,72 +59,43 @@ function ProfileScreen({user_data}) {
                 </View>
                 <ScrollView contentContainerStyle={styles.userListing} >
                     <View style={styles.userListingWrapper}>
-                        <View style={styles.userListingItem}>
-                            <View style={styles.userListingItemInfo}>
-                                <Image style={styles.userListingItemInfoImage} source={{ uri: 'https://picsum.photos/id/237/200/300' }} />
-                                <View style={styles.userListingItemInfoContent}>
-                                    <View style={styles.userListingItemInfoContentHeading}>
-                                        <Text style={styles.userListingItemInfoContentHeadingTitle}>Listings 1</Text>
-                                        <Text style={styles.userListingItemInfoContentHeadingTime}>21s ago</Text>
-                                    </View>
-                                    <View style={styles.userListingItemInfoContentBottom}>
-                                        <Text style={styles.userListingItemInfoContentBottomPrice}>£500</Text>
-                                        <Text style={styles.userListingItemInfoContentBottomLocation}>Marrakech</Text>
-                                    </View>
-                                </View>
-                            </View>
-                        <Divider />
-                            <View style={styles.userListingItemAnalytics}>
-                                <View style={styles.userListingItemAnalyticsAdView}>
-                                    <Text>0</Text>
-                                    <Text style={styles.userListingItemAnalyticsAdViewLabel}>AD VIEWS</Text>
-                                </View>
-                                <Ionicons name="ellipsis-vertical" size={20} color="#A6A6A6" />
-                                <View style={styles.userListingItemAnalyticsListView}>
-                                    <Text>0</Text>
-                                    <Text style={styles.userListingItemAnalyticsListViewLabel}>LIST VIEWS</Text>
-                                </View>
-                                <Ionicons name="ellipsis-vertical" size={20} color="#A6A6A6" />
-                                <View style={styles.userListingItemAnalyticsReplies}>
-                                    <Text>0</Text>
-                                    <Text style={styles.userListingItemAnalyticsRepliesLabel}>REPLIES</Text>
-                                </View>
-                                <Text style={styles.userListingItemAnalyticsPromote}>Promote</Text>
-                            </View>
-                        </View>
-                        <View style={styles.userListingItem}>
-                            <View style={styles.userListingItemInfo}>
-                                <Image style={styles.userListingItemInfoImage} source={{ uri: 'https://picsum.photos/id/237/200/300' }} />
-                                <View style={styles.userListingItemInfoContent}>
-                                    <View style={styles.userListingItemInfoContentHeading}>
-                                        <Text style={styles.userListingItemInfoContentHeadingTitle}>Listings 1</Text>
-                                        <Text style={styles.userListingItemInfoContentHeadingTime}>21s ago</Text>
-                                    </View>
-                                    <View style={styles.userListingItemInfoContentBottom}>
-                                        <Text style={styles.userListingItemInfoContentBottomPrice}>£500</Text>
-                                        <Text style={styles.userListingItemInfoContentBottomLocation}>Marrakech</Text>
+                        {listings.map(listing => 
+                        
+                            <View style={styles.userListingItem}>
+                                <View style={styles.userListingItemInfo}>
+                                    <Image style={styles.userListingItemInfoImage} source={{ uri: 'https://picsum.photos/id/237/200/300' }} />
+                                    <View style={styles.userListingItemInfoContent}>
+                                        <View style={styles.userListingItemInfoContentHeading}>
+                                            <Text style={styles.userListingItemInfoContentHeadingTitle}>{ listing.title }</Text>
+                                            <Text style={styles.userListingItemInfoContentHeadingTime}>{ moment(new Date(listing.created_at.seconds * 1000)).fromNow() }</Text>
+                                        </View>
+                                        <View style={styles.userListingItemInfoContentBottom}>
+                                            <Text style={styles.userListingItemInfoContentBottomPrice}>£{ listing.price }</Text>
+                                            <Text style={styles.userListingItemInfoContentBottomLocation}>{ listing.location }</Text>
+                                        </View>
                                     </View>
                                 </View>
+                                <Divider />
+                                <View style={styles.userListingItemAnalytics}>
+                                    <View style={styles.userListingItemAnalyticsAdView}>
+                                        <Text>0</Text>
+                                        <Text style={styles.userListingItemAnalyticsAdViewLabel}>AD VIEWS</Text>
+                                    </View>
+                                    <Ionicons name="ellipsis-vertical" size={20} color="#A6A6A6" />
+                                    <View style={styles.userListingItemAnalyticsListView}>
+                                        <Text>0</Text>
+                                        <Text style={styles.userListingItemAnalyticsListViewLabel}>LIST VIEWS</Text>
+                                    </View>
+                                    <Ionicons name="ellipsis-vertical" size={20} color="#A6A6A6" />
+                                    <View style={styles.userListingItemAnalyticsReplies}>
+                                        <Text>0</Text>
+                                        <Text style={styles.userListingItemAnalyticsRepliesLabel}>REPLIES</Text>
+                                    </View>
+                                    <Text style={styles.userListingItemAnalyticsPromote}>Promote</Text>
+                                </View>
                             </View>
-                        <Divider />
-                            <View style={styles.userListingItemAnalytics}>
-                                <View style={styles.userListingItemAnalyticsAdView}>
-                                    <Text>0</Text>
-                                    <Text style={styles.userListingItemAnalyticsAdViewLabel}>AD VIEWS</Text>
-                                </View>
-                                <Ionicons name="ellipsis-vertical" size={20} color="#A6A6A6" />
-                                <View style={styles.userListingItemAnalyticsListView}>
-                                    <Text>0</Text>
-                                    <Text style={styles.userListingItemAnalyticsListViewLabel}>LIST VIEWS</Text>
-                                </View>
-                                <Ionicons name="ellipsis-vertical" size={20} color="#A6A6A6" />
-                                <View style={styles.userListingItemAnalyticsReplies}>
-                                    <Text>0</Text>
-                                    <Text style={styles.userListingItemAnalyticsRepliesLabel}>REPLIES</Text>
-                                </View>
-                                <Text style={styles.userListingItemAnalyticsPromote}>Promote</Text>
-                            </View>
-                        </View>
+                        )
+                        }
                     </View>
                 </ScrollView>
             </View>
@@ -102,7 +105,7 @@ function ProfileScreen({user_data}) {
 
 const mapStateToProps = (state) => {
     const { userData } = state
-    
+
     return {
         user_data: userData
     }
@@ -132,28 +135,28 @@ const styles = StyleSheet.create({
         flexBasis: `${25}%`
     },
 
-    
+
     profileInfoDetail: {
         display: 'flex',
         flexDirection: 'row',
-        columnGap : 4
-    }, 
+        columnGap: 4
+    },
 
     profileInfoDetailName: {
         fontWeight: '700',
         color: '#3996CC',
-    }, 
-    
+    },
+
     profileInfoDetailAds: {
         color: 'gray'
     },
-    
+
     profileInfoState: {
         display: 'flex',
         flexDirection: 'row',
-        alignItems:'center'
+        alignItems: 'center'
     },
-    
+
     profileInfoStateLabel: {
         color: "#4BC138"
     },
@@ -221,7 +224,7 @@ const styles = StyleSheet.create({
     userListingItemInfoContentHeadingTitle: {
         fontSize: 22
     },
-    
+
     userListingItemInfoContentHeadingTime: {
         color: '#666666'
     },
@@ -238,14 +241,14 @@ const styles = StyleSheet.create({
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent:'space-around',
+        justifyContent: 'space-around',
         padding: 10
     },
 
     userListingItemAnalyticsAdView: {
         display: 'flex',
         flexDirection: 'column',
-        alignItems:'center'
+        alignItems: 'center'
     },
 
     userListingItemAnalyticsAdViewLabel: {
@@ -255,7 +258,7 @@ const styles = StyleSheet.create({
     userListingItemAnalyticsListView: {
         display: 'flex',
         flexDirection: 'column',
-        alignItems:'center'
+        alignItems: 'center'
     },
 
     userListingItemAnalyticsListViewLabel: {
@@ -265,7 +268,7 @@ const styles = StyleSheet.create({
     userListingItemAnalyticsReplies: {
         display: 'flex',
         flexDirection: 'column',
-        alignItems:'center'
+        alignItems: 'center'
     },
 
     userListingItemAnalyticsRepliesLabel: {
