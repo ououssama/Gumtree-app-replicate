@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { FontAwesome5, FontAwesome, Ionicons } from '@expo/vector-icons';
-import { addDoc, collection, deleteDoc, doc, getDocs, query, snapshotEqual, where } from 'firebase/firestore';
+import { addDoc, collection, collectionGroup, deleteDoc, doc, getDocs, query, snapshotEqual, where } from 'firebase/firestore';
 import { getDownloadURL, ref } from 'firebase/storage';
 import { auth, db, storage } from '../firebase/firebase';
 
@@ -68,37 +68,41 @@ export default function HomeScreen() {
     }
 
   const handleLikedListing = async (FavID, listingId, authId, action) => {
+    try {
+      const createdDate = new Date();
+      const listingRef = collection(db, 'Listing');
+      const listingQuery = query(listingRef, where('listingUID', '==', listingId))
+      const listingDoc = (await getDocs(listingQuery)).docs[0].id
+      console.log(listingDoc);
+
     console.log(action);
     if (action === 'ADD') {
-      try{
-        addDoc(collection(db, 'Favorite'),
+        addDoc(collection(db, `Listing/${listingDoc}/Favorites`),
           {
             like_id: FavID,
             user_uid: authId,
-            listing_uid: listingId
+            listing_uid: listingId,
+            created_at: createdDate
           })
-      } catch (err) {
-        console.error(err);
-      }
     }
     
     if (action === 'DELETE') {
-        try{
-        const FavRef = collection(db, 'Favorite')
+        const FavRef = collection(db, `Listing/${listingDoc}/Favorites`)
         const FavQuery = query(FavRef, where('like_id', '==', FavID))
         const FavDocs = getDocs(FavQuery)
         await FavDocs.then(querySnapshot => {
           querySnapshot?.forEach(docRes => {
-           deleteDoc(doc(db, 'Favorite', docRes.id))
+           deleteDoc(doc(db, `Listing/${listingDoc}/Favorites`, docRes.id))
              
           })
         }).catch(err => {
           console.error(err);
         })
-        } catch (err) {
-          console.error(err);
         }
-      }
+    }
+    catch (error) {
+      console.log(error);
+    }
   }
 
   React.useEffect(() => {

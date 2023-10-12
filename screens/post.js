@@ -94,6 +94,8 @@ function PostScreen({ navigation, user_data, categorie_data }) {
                         image_name: image.name,
                         listingUID: uniqueID,
                     })
+                console.log(createdDate);
+            navigation.navigate('Home')
             } catch (err) {
                 console.error(err);
             }

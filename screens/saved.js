@@ -2,6 +2,10 @@ import * as React from 'react'
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import moment from 'moment/moment';
+import { DocumentSnapshot, addDoc, collection, collectionGroup, deleteDoc, doc, getDocs, query, where } from 'firebase/firestore';
+import { auth, db, storage } from '../firebase/firebase';
+import { getDownloadURL, ref } from 'firebase/storage';
+import { useIsFocused } from '@react-navigation/native';
 
 let localeData = moment.updateLocale('en', {
     relativeTime: {
@@ -53,21 +57,120 @@ const favorites =
 export default function SavedScreen() {
 
     const [like, setLike] = React.useState([])
+    const [savedListings, setSavedListings] = React.useState([])
 
-    const toggelLike = (listingKey) => {
-        if (like.length > 0) {
-            if (like.includes(listingKey)) {
-                setLike(like.filter(lk => lk !== listingKey))
-            } else {
-                setLike(prev => ([...prev, listingKey]))
+
+    const toggelLike = async (listingKey, listingID, likeId) => {
+        const authUser = auth.currentUser.uid;
+        const uniqueID = Date.now()
+        if (like.includes(likeId)) {
+            like.splice(like.indexOf(likeId), 1)
+            console.log('new like set: ', like);
+            const newLikeSet = like
+            setLike(newLikeSet)
+            // console.log(targetedBtn.likeId);
+            handleLikedListing(likeId, listingID, authUser, 'DELETE')
+
+        }
+        // else {
+        //     let like_id = uniqueID
+        //     setLike(prev => ([...prev, { key: listingKey, likeId: like_id }]))
+        //     handleLikedListing(like_id, listingID, authUser, 'ADD')
+        // }
+
+    }
+
+    const handleLikedListing = async (FavID, listingId, authId, action) => {
+        try {
+
+            const listingRef = collection(db, 'Listing');
+            const listingQuery = query(listingRef, where('listingUID', '==', listingId))
+            const listingDoc = (await getDocs(listingQuery)).docs[0].id
+            console.log(listingDoc);
+
+            console.log(action);
+            if (action === 'ADD') {
+                addDoc(collection(db, `Listing/${listingDoc}/Favorites`),
+                    {
+                        like_id: FavID,
+                        user_uid: authId,
+                        listing_uid: listingId
+                    })
             }
-        } else {
-            setLike(prev => ([...prev, listingKey]))
+
+            if (action === 'DELETE') {
+                const FavRef = collection(db, `Listing/${listingDoc}/Favorites`)
+                const FavQuery = query(FavRef, where('like_id', '==', FavID))
+                const FavDocs = getDocs(FavQuery)
+                await FavDocs.then(querySnapshot => {
+                    querySnapshot?.forEach(docRes => {
+                        deleteDoc(doc(db, `Listing/${listingDoc}/Favorites`, docRes.id))
+
+                    })
+                }).catch(err => {
+                    console.error(err);
+                })
+            }
+        }
+        catch (error) {
+            console.log(error);
         }
     }
 
+    const isFocused = useIsFocused()
+    let i = 0
+
+    React.useEffect(() => {
+        const getSavedListings = async () => {
+            try {
+                let array = [];
+                setLike([])
+                const authUser = auth.currentUser.uid
+                const favoriteListings = query(collectionGroup(db, 'Favorites'), where('user_uid', '==', authUser))
+                const favoriteListingsDocs = (await getDocs(favoriteListings)).docs
+                const listingDocs = await getDocs(collection(db, "Listing"));
+                
+                listingDocs.forEach((doc) => {
+                    favoriteListingsDocs.every((favDoc) => {
+                        if (favDoc.data().user_uid == authUser && favDoc.data().listing_uid == doc.data().listingUID) {
+                            // console.log('listing', doc.data());
+                            // console.log('data: ', favDoc.id, '=>', favDoc.data());
+                            const pathReference = ref(storage, `listings/images/${doc.data().image_name}`);
+                            getDownloadURL(pathReference).then((res) => {
+                                // console.log(favDoc.data().like_id);
+                                array = [...array, ({ ...doc.data(), uri: res, like_id: favDoc.data().like_id, liked_at: favDoc.data().created_at })]
+                                console.log('array: ', array);
+                                setLike(prev => ([...prev, favDoc.data().like_id]))
+                                setSavedListings(array)
+                            }).catch((err) => {
+                                console.error(err);
+                            })
+                            return false
+                        }
+                        return true
+                    })
+                })
+
+                // console.log(savedListings);
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        getSavedListings()
+    }, [isFocused])
+
+    // React.useEffect(() => {
+    //     console.log(savedListings);
+    // }, [savedListings])
+
+    // React.useEffect(() => {
+    //     console.log(like);
+    // }, [like])
+
     const convertTimeStamp = (date) => {
-        const formateDate = new Date(date);
+        const formateDate = new Date(date * 1000);
+        console.log(date);
         return moment(formateDate, "YYYYMMDD").fromNow();
     }
 
@@ -79,26 +182,26 @@ export default function SavedScreen() {
                 </View>
                 <ScrollView contentContainerStyle={styles.userListing} >
                     <View style={styles.userListingWrapper}>
-                        {favorites.map((favorite, i) =>
+                        {savedListings.map((favorite, i) =>
                             <View key={i} style={styles.userListingItem}>
-                            <View style={styles.userListingItemInfo}>
-                                <Image style={styles.userListingItemInfoImage} source={{ uri: favorite.imageUrl }} />
-                                <View style={styles.userListingItemInfoContent}>
-                                    <View style={styles.userListingItemInfoContentHeading}>
-                                       <Text style={styles.userListingItemInfoContentHeadingTitle}>{ favorite.title }</Text>
-                                       <Text style={styles.userListingItemInfoContentHeadingTime}>{convertTimeStamp(favorite.date)}</Text>
-                                    </View>
-                                    <Text style={styles.userListingItemInfoDesc}>{ favorite.description}</Text>
-                                    <View style={styles.userListingItemInfoContentBottom}>
-                                       <View style={styles.userListingItemInfoContentBottomDetails}>
-                                           <Text style={styles.userListingItemInfoContentBottomPrice}>{favorite.currency }{ favorite.price}</Text>
-                                           <Text style={styles.userListingItemInfoContentBottomLocation}>{ favorite.location }</Text>
-                                       </View>
-                                        <Ionicons name={like.includes(i) ? 'ios-heart' : 'ios-heart-outline'} size={34} color='#d5483f' onPress={() => toggelLike(i)} />
+                                <View style={styles.userListingItemInfo}>
+                                    <Image style={styles.userListingItemInfoImage} source={{ uri: favorite.uri }} />
+                                    <View style={styles.userListingItemInfoContent}>
+                                        <View style={styles.userListingItemInfoContentHeading}>
+                                            <Text style={styles.userListingItemInfoContentHeadingTitle}>{favorite.title}</Text>
+                                            <Text style={styles.userListingItemInfoContentHeadingTime}>{convertTimeStamp(favorite.liked_at.seconds)}</Text>
+                                        </View>
+                                        <Text style={styles.userListingItemInfoDesc}>{favorite.description}</Text>
+                                        <View style={styles.userListingItemInfoContentBottom}>
+                                            <View style={styles.userListingItemInfoContentBottomDetails}>
+                                                <Text style={styles.userListingItemInfoContentBottomPrice}>£{favorite.price}</Text>
+                                                <Text style={styles.userListingItemInfoContentBottomLocation}>{favorite.location}</Text>
+                                            </View>
+                                            <Ionicons name={like.includes(favorite.like_id) ? 'ios-heart' : 'ios-heart-outline'} size={34} color='#d5483f' onPress={() => toggelLike(i, favorite.listingUID, favorite.like_id)} />
+                                        </View>
                                     </View>
                                 </View>
-                            </View>
-                        </View>) }
+                            </View>)}
                     </View>
                 </ScrollView>
             </View>
