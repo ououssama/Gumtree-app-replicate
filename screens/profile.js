@@ -45,23 +45,7 @@ function ProfileScreen({ user_data }) {
         }
 
         getListings()
-
-        console.log('listings: ',listings);
-
-        // if (listings?.image_name) {
-        //     console.log(listings?.image_name);
-        //     const pathReference = ref(storage, `images/${listings.image_name}`);
-        //     getDownloadURL(pathReference).then((res) => {
-        //         console.log(res);
-        //     }).catch((err) => {
-        //         console.error(err);
-        //     })
-        // }
     }, [])
-
-    // useEffect(() => {
-    //     console.log(listings);
-    // }, [listings])
 
     return (
         <>

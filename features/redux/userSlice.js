@@ -1,10 +1,13 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { userLoginAction } from "./userActions";
+import { auth } from "../../firebase/firebase";
 
+// console.log();
+// TODO: need to use react-presiste to fresh user data when the app reopen
 const initialState = {
-    email: '',
+    email: auth?.currentUser?.uid ? auth.currentUser.email : '',
     password: '',
-    isLogged: false
+    isLogged: auth?.currentUser?.uid? true : false
 }
 
 export const userSlice = createSlice({

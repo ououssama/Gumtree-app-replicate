@@ -83,6 +83,7 @@ function PostScreen({ navigation, user_data, categorie_data }) {
             // Todo: we have to get user uid from redux store
             const authUser = auth.currentUser.uid;
             const createdDate = new Date();
+            const uniqueID = Date.now()
             try {
                 handleImage(image.uri, image.name);    
                 addDoc(collection(db, 'Listing'),
@@ -90,7 +91,8 @@ function PostScreen({ navigation, user_data, categorie_data }) {
                         ...data,
                         created_at: createdDate,
                         user_uid: authUser,
-                        image_name: image.name
+                        image_name: image.name,
+                        listingUID: uniqueID,
                     })
             } catch (err) {
                 console.error(err);
