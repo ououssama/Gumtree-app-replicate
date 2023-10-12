@@ -1,22 +1,20 @@
 import * as React from 'react'
 import { NavigationContainer } from '@react-navigation/native';
 import TabLayout from './layouts/tabLayout';
-import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
-import rootReducer from './features/redux/reducers'
-
-const store = configureStore({
-  reducer: rootReducer
-})
+import { persistor, store } from './features/redux/configureStore';
+import { PersistGate } from 'redux-persist/integration/react';
 
 // console.log(store.getState())
 
 export default function App() {
   return (<>
     <NavigationContainer>
-      <Provider store={store}>
-        <TabLayout />
-      </Provider>
+      <PersistGate loading={null} persistor={persistor}>
+        <Provider store={store}>
+          <TabLayout />
+        </Provider>
+      </PersistGate>
     </NavigationContainer>
     </>
   )
