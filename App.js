@@ -4,13 +4,14 @@ import TabLayout from './layouts/tabLayout';
 import { Provider } from 'react-redux';
 import { persistor, store } from './features/redux/configureStore';
 import { PersistGate } from 'redux-persist/integration/react';
+import LoadingScreen from './components/loadingScreen';
 
 // console.log(store.getState())
 
 export default function App() {
   return (<>
     <NavigationContainer>
-      <PersistGate loading={null} persistor={persistor}>
+      <PersistGate loading={<LoadingScreen />} persistor={persistor}>
         <Provider store={store}>
           <TabLayout />
         </Provider>
