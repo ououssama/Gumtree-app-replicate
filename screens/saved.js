@@ -2,15 +2,16 @@ import * as React from 'react'
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import moment from 'moment/moment';
-import { DocumentSnapshot, addDoc, collection, collectionGroup, deleteDoc, doc, getDocs, query, where } from 'firebase/firestore';
+import { addDoc, collection, collectionGroup, deleteDoc, doc, getDocs, query, where } from 'firebase/firestore';
 import { auth, db, storage } from '../firebase/firebase';
 import { getDownloadURL, ref } from 'firebase/storage';
 import { useIsFocused } from '@react-navigation/native';
 
-let localeData = moment.updateLocale('en', {
+moment.updateLocale('en', {
     relativeTime: {
         future: "in %s",
         past: "%s ago",
+        s: "%d s",
         ss: '%d s',
         mm: "%d m",
         hh: "%d h",
@@ -19,40 +20,6 @@ let localeData = moment.updateLocale('en', {
         yy: "%d y"
     }
 });
-
-const favorites =
-    [
-        {
-            id: 1,
-            title: 'listings 1',
-            date: '2023-09-13T13:17:40+01:00',
-            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit',
-            imageUrl: 'https://picsum.photos/id/237/200/300',
-            price: 50,
-            currency: '£',
-            location: 'Marrakech'
-        },
-        {
-            id: 2,
-            title: 'listings 1',
-            date: '2023-09-13T11:49:40+01:00',
-            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit',
-            imageUrl: 'https://picsum.photos/id/26/200/300',
-            price: 34.02,
-            currency: '£',
-            location: 'Marrakech'
-        },
-        {
-            id: 3,
-            title: 'listings 1',
-            date: '2023-09-13T11:49:40+01:00',
-            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit',
-            imageUrl: 'https://picsum.photos/id/26/200/300',
-            price: 34.02,
-            currency: '£',
-            location: 'Marrakech'
-        },
-    ]
 
 export default function SavedScreen() {
 
@@ -118,7 +85,6 @@ export default function SavedScreen() {
     }
 
     const isFocused = useIsFocused()
-    let i = 0
 
     React.useEffect(() => {
         const getSavedListings = async () => {

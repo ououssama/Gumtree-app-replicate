@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native'
+import { StyleSheet, Text, TextInput, TouchableHighlight, FlatList, View, ScrollView } from 'react-native'
 import React from 'react'
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
@@ -6,24 +6,29 @@ import { collection, endAt, endBefore, getDocs, orderBy, query, startAt } from '
 import { db, storage } from '../firebase/firebase';
 import { getDownloadURL, ref } from 'firebase/storage';
 import { Divider } from 'react-native-paper';
+import { Item } from '../screens/listingCategory';
 
-export default function SearchComponent() {
+export default function SearchComponent({ navigation }) {
 
     const [search, setSearch] = useState(null);
     const [searchResult, setSearchResult] = useState('');
     const [listing, setListings] = useState(null);
 
+    const handleSearch = (text) => {
+        console.log(text);
+    }
+
     React.useEffect(() => {
         const getListings = async () => {
+            setSearchResult([])
             try {
-                setSearchResult([])
                 if (search) {
                     const listingRef = collection(db, "Listing")
-                    const listingQuery = query(listingRef, orderBy('title'), startAt(search), endAt(search[search?.length - 1]))
+                    const listingQuery = query(listingRef, orderBy('title'), startAt(`%${search}%`), endAt(search + "\uf8ff"))
                     const listingDocs = getDocs(listingQuery)
                         ; (await listingDocs).forEach(item => {
                             // array.push(item.data().title)
-                            setSearchResult(prev => [...prev, item.data().title]);
+                            setSearchResult(prev => [...prev, item.data()]);
                         })
                 }
             } catch (error) {
@@ -32,26 +37,24 @@ export default function SearchComponent() {
         }
 
         getListings()
-        // console.log('search result',searchResult);
+        console.log('search result', searchResult);
 
     }, [search])
 
     return (
         <View style={styles.Container}>
             <View style={styles.searchContainer}>
-                <TextInput inputMode='search' placeholder='Search Gumtree' style={styles.searchInput} onChangeText={(text) => setSearch(text)} />
+                <TextInput inputMode='search' placeholder='Search Gumtree' style={styles.searchInput} onChangeText={(text) => setSearch(text)} onBlur={() => setSearchResult([])} />
                 <Ionicons style={styles.searchIcon} name="search-outline" size={27} color="gray" />
             </View>
             {
                 searchResult.length > 0 &&
                 <View style={styles.resultsContainer}>
-                    {searchResult?.map((res, i) =>
-                        <>
-                            <Text key={i} style={{ fontSize: 18, paddingVertical: 15 }}>{res}</Text>
-                            {searchResult.length -1 > i && <Divider />}
-                        </>
-                    )
-                    }
+                    <FlatList
+                        data={searchResult}
+                        renderItem={({ item }) => <Item title={item.title} onPress={(item) => navigation.navigate('Results', { searchKeyword: item.title })} />}
+                        keyExtractor={item => item.listingUID}
+                    />
                 </View>
             }
         </View>
@@ -92,5 +95,12 @@ const styles = StyleSheet.create({
         width: `${100}%`,
         display: 'flex',
         flexDirection: 'column'
+    },
+    item: {
+        backgroundColor: 'white',
+        padding: 10,
+    },
+    resultText: {
+
     }
 })

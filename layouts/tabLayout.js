@@ -15,6 +15,7 @@ import UserGate from '../screens/auth/userGate';
 import { useSelector } from 'react-redux';
 import RegisterScreen from '../screens/auth/register';
 import ListingCategory from '../screens/listingCategory';
+import SearchResults from '../screens/searchResults';
 
 const Tab = createBottomTabNavigator();
 
@@ -93,6 +94,7 @@ export default function TabLayout() {
       <Tab.Screen name="Post" children={({ navigation }) => <resetForm.Provider value={chunk}><PostScreen navigation={navigation} /></resetForm.Provider>} options={{ tabBarLabel: '', tabBarHideOnKeyboard: true }} />
       <Tab.Screen name="Saved" children={({ navigation }) =>  <UserGate navigation={navigation}><SavedScreen/></UserGate>} />
       <Tab.Screen name="Message" children={({ navigation }) =>  <UserGate navigation={navigation}><MessageScreen /></UserGate>} />
+      <Tab.Screen name="Results" component={SearchResults} options={{ tabBarButton: () => (null) }}/>
       <Tab.Screen name="Categories" component={ListingCategory} options={{ tabBarButton: () => (null) }} />
       <Tab.Screen name="Login" component={LoginScreen} options={{ tabBarButton: () => (null) }} />
       <Tab.Screen name="Register" component={RegisterScreen} options={{ tabBarButton: () => (null) }} />

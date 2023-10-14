@@ -25,7 +25,7 @@ const DATA = [
     },
 ];
 
-const Item = ({title, onPress }) => (
+export const Item = ({title, onPress }) => (
     <>
         <TouchableHighlight activeOpacity={1} underlayColor="#DDDDDD" style={styles.item} onPress={onPress}>
             <Text style={styles.title}>{title}</Text>

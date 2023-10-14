@@ -9,7 +9,7 @@ export default function HeaderLayout({option, navigation, headerStyle}) {
       return (
         <View style={[headerStyle, {height: option === 'Home' ? Platform.OS === 'android' ? 100 : 'ios' && 110 : 70}]} >
           {option === 'Home' ?
-              <SearchComponent />
+              <SearchComponent navigation={navigation} />
             :
             option === 'Post' ? 
               <>
