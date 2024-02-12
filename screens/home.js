@@ -4,6 +4,8 @@ import { FontAwesome5, FontAwesome, Ionicons } from '@expo/vector-icons';
 import { addDoc, collection, collectionGroup, deleteDoc, doc, getDocs, query, snapshotEqual, where } from 'firebase/firestore';
 import { getDownloadURL, ref } from 'firebase/storage';
 import { auth, db, storage } from '../firebase/firebase';
+import { useIsFocused } from '@react-navigation/native';
+import { ActivityIndicator } from 'react-native-paper';
 
 const listings =
   [
@@ -105,6 +107,8 @@ export default function HomeScreen() {
     }
   }
 
+  const isFocused = useIsFocused()
+
   React.useEffect(() => {
     const getListings = async () => {
       let array = [];
@@ -123,7 +127,7 @@ export default function HomeScreen() {
     }
 
     getListings()
-  }, [])
+  }, [isFocused])
 
   // React.useEffect(() => {
   //   console.log('likes',like);
@@ -154,6 +158,11 @@ export default function HomeScreen() {
             <Text style={styleSheet.categorieItemLabel}>Others</Text>
           </View>
         </View>
+        {!listings.length ? <View style={styleSheet.Loader}>
+          <ActivityIndicator animating={true} size={34} color={'#c2616b'} />
+          <Text style={{marginTop:10}}>Gather listing for you</Text>
+        </View>
+        :
         <ScrollView >
           <View style={styleSheet.location}><Text style={styleSheet.locationLabel}>In your area</Text><Text style={styleSheet.locationPlace}>Marrakech</Text></View>
           <View style={styleSheet.Listings}>
@@ -170,7 +179,9 @@ export default function HomeScreen() {
                   </View>
                 </View>)}
           </View>
-        </ScrollView>
+          </ScrollView>
+      }
+        
       </View>
     </>
   );
@@ -214,6 +225,12 @@ const styleSheet = StyleSheet.create({
   locationPlace: {
     fontSize: 19,
     color: '#377eb1'
+  },
+  Loader: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   Listings: {
     display: 'flex',

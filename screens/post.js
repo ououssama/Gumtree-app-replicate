@@ -53,7 +53,7 @@ function PostScreen({ navigation, user_data, categorie_data }) {
         uploadBytes(postRef, blobImg).then(snapshot => {
             console.log('photo uploaded');
         }).catch(error => {
-            console.log('there is a problem uploading the image');
+            console.log('there is a problem uploading the image'+ error);
         })
     }
 
@@ -97,7 +97,7 @@ function PostScreen({ navigation, user_data, categorie_data }) {
                 console.log(createdDate);
             navigation.navigate('Home')
             } catch (err) {
-                console.error(err);
+                console.error('Image: '+ err);
             }
         }
     };

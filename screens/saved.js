@@ -6,6 +6,7 @@ import { addDoc, collection, collectionGroup, deleteDoc, doc, getDocs, query, wh
 import { auth, db, storage } from '../firebase/firebase';
 import { getDownloadURL, ref } from 'firebase/storage';
 import { useIsFocused } from '@react-navigation/native';
+import { ActivityIndicator } from 'react-native-paper';
 
 moment.updateLocale('en', {
     relativeTime: {
@@ -146,30 +147,36 @@ export default function SavedScreen() {
                 <View style={styles.subTab}>
                     <Text style={styles.subTabFav}>Favourites</Text>
                 </View>
-                <ScrollView contentContainerStyle={styles.userListing} >
-                    <View style={styles.userListingWrapper}>
-                        {savedListings.map((favorite, i) =>
-                            <View key={i} style={styles.userListingItem}>
-                                <View style={styles.userListingItemInfo}>
-                                    <Image style={styles.userListingItemInfoImage} source={{ uri: favorite.uri }} />
-                                    <View style={styles.userListingItemInfoContent}>
-                                        <View style={styles.userListingItemInfoContentHeading}>
-                                            <Text style={styles.userListingItemInfoContentHeadingTitle}>{favorite.title}</Text>
-                                            <Text style={styles.userListingItemInfoContentHeadingTime}>{convertTimeStamp(favorite.liked_at.seconds)}</Text>
-                                        </View>
-                                        <Text style={styles.userListingItemInfoDesc}>{favorite.description}</Text>
-                                        <View style={styles.userListingItemInfoContentBottom}>
-                                            <View style={styles.userListingItemInfoContentBottomDetails}>
-                                                <Text style={styles.userListingItemInfoContentBottomPrice}>£{favorite.price}</Text>
-                                                <Text style={styles.userListingItemInfoContentBottomLocation}>{favorite.location}</Text>
+                {!savedListings.length ? <View style={styles.Loader}>
+                    <ActivityIndicator animating={true} size={34} color={'#c2616b'} />
+                    <Text style={{ marginTop: 10 }}>Gather listing for you</Text>
+                </View>
+                    :
+                    <ScrollView contentContainerStyle={styles.userListing} >
+                        <View style={styles.userListingWrapper}>
+                            {savedListings.map((favorite, i) =>
+                                <View key={i} style={styles.userListingItem}>
+                                    <View style={styles.userListingItemInfo}>
+                                        <Image style={styles.userListingItemInfoImage} source={{ uri: favorite.uri }} />
+                                        <View style={styles.userListingItemInfoContent}>
+                                            <View style={styles.userListingItemInfoContentHeading}>
+                                                <Text style={styles.userListingItemInfoContentHeadingTitle}>{favorite.title}</Text>
+                                                <Text style={styles.userListingItemInfoContentHeadingTime}>{convertTimeStamp(favorite.liked_at.seconds)}</Text>
                                             </View>
-                                            <Ionicons name={like.includes(favorite.like_id) ? 'ios-heart' : 'ios-heart-outline'} size={34} color='#d5483f' onPress={() => toggelLike(i, favorite.listingUID, favorite.like_id)} />
+                                            <Text style={styles.userListingItemInfoDesc}>{favorite.description}</Text>
+                                            <View style={styles.userListingItemInfoContentBottom}>
+                                                <View style={styles.userListingItemInfoContentBottomDetails}>
+                                                    <Text style={styles.userListingItemInfoContentBottomPrice}>£{favorite.price}</Text>
+                                                    <Text style={styles.userListingItemInfoContentBottomLocation}>{favorite.location}</Text>
+                                                </View>
+                                                <Ionicons name={like.includes(favorite.like_id) ? 'ios-heart' : 'ios-heart-outline'} size={34} color='#d5483f' onPress={() => toggelLike(i, favorite.listingUID, favorite.like_id)} />
+                                            </View>
                                         </View>
                                     </View>
-                                </View>
-                            </View>)}
-                    </View>
-                </ScrollView>
+                                </View>)}
+                        </View>
+                    </ScrollView>
+                }
             </View>
         </>
     )
@@ -179,6 +186,12 @@ const styles = StyleSheet.create({
     wrapper: {
         flex: 1,
     },
+    Loader: {
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      },
     subTab: {
         display: 'flex',
         alignItems: 'center',
