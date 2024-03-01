@@ -9,6 +9,7 @@ import { auth, db, storage } from '../firebase/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import moment from 'moment/moment';
 import { useRef } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 
 function ProfileScreen({ user_data }) {
 
