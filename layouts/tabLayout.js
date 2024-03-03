@@ -25,7 +25,7 @@ export default function TabLayout() {
     const { isLogged } = useSelector(state => state.userData)
     const chunk = { resetData, setResetData }
     const platformOs = 'android' || 'ios'
-    const tablessRoute = ['Post', 'Categories', 'Login', 'Register']
+    const tablessRoute = ['Post', 'Categories', 'Login', 'Register', 'Chat']
 
     return (
         <Tab.Navigator
