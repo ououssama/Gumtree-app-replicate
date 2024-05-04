@@ -7,14 +7,14 @@ const messageData =
       _id: "65e4b9b931a30a8b08a0e32f",
       firstName: "Landry",
       lastName: "Witt",
-      image: "./../assets/default-profile.png",
+      image: "./../assets/default-profile.jpg",
    },
 
    receiver: {
       _id: "65e4b9b91cf7b83796f62db7",
       firstName: "Daisy",
       lastName: "Leonard",
-      image: "../assets/default-profile.png",
+      image: "../assets/default-profile.jpg",
    },
 
    messages: [
@@ -59,7 +59,7 @@ export default function ChatScreen() {
             {messageData.messages.map((m, i) =>
                <View key={i} style={{ alignItems: (messageData.sender._id === m._id) ? "flex-end" : "flex-start" }}>
                   <View style={[styles.MessageContainer, { flexDirection: (messageData.sender._id === m._id) ? "row-reverse" : "row" }]}>
-                     <Image style={styles.ProfileImage} source={require("../assets/default-profile.png")}></Image>
+                     <Image style={styles.ProfileImage} source={require("../assets/default-profile.jpg")}></Image>
                      <View style={[styles.MessageBubbleContainer, { backgroundColor: (messageData.sender._id === m._id) ? "#d7d7d7" : "#1d7eed" }]}>
                         <Text style={[styles.MessageBubbleText, { color: (messageData.sender._id === m._id) ? "#353535" : "white" }]}>{m.message}</Text>
                      </View>
