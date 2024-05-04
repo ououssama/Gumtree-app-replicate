@@ -33,6 +33,12 @@
         "projectId": "fca01b74-8ab2-4449-a719-a44ffd13737c"
       }
     },
-    "owner": "oussama02"
+    "owner": "oussama02",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/fca01b74-8ab2-4449-a719-a44ffd13737c"
+    }
   }
 }
