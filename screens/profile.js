@@ -53,7 +53,7 @@ function ProfileScreen({ user_data }) {
             <View style={styles.wrapper}>
                 <View style={styles.profile}>
                     <View style={styles.profileInfo}>
-                        <Image style={styles.profileInfoImage} source={require('../assets/default-profile.png')} />
+                        <Image style={styles.profileInfoImage} source={require('../assets/default-profile.jpg')} />
                         <View style={styles.profileInfoDetail}>
                             <Text style={styles.profileInfoDetailName}>{user_data.email}</Text>
                             <Text style={styles.profileInfoDetailAds}>(0 ads)</Text>
