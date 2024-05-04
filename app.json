@@ -30,7 +30,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "fca01b74-8ab2-4449-a719-a44ffd13737c"
+        "projectId": "ed3a04be-d545-4ff5-933b-2e426e568c9d"
       }
     },
     "owner": "oussama02",
@@ -38,7 +38,7 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/fca01b74-8ab2-4449-a719-a44ffd13737c"
+      "url": "https://u.expo.dev/ed3a04be-d545-4ff5-933b-2e426e568c9d"
     }
   }
 }
