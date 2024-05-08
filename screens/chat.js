@@ -1,5 +1,6 @@
 import { Controller, useForm } from "react-hook-form"
 import { Image, StyleSheet, Text, TextInput, TouchableHighlight, View } from "react-native"
+import { Feather } from '@expo/vector-icons';
 
 const messageData =
 {
@@ -55,6 +56,13 @@ export default function ChatScreen() {
    });
    return (
       <View style={styles.ChatContainer}>
+         <View style={styles.ChatListingInfoContainer}>
+         <Image style={styles.ListingInfoImg} source={{uri: "https://picsum.photos/id/237/200/300"}}></Image>
+            <View style={styles.ListingInfoProfile}>
+               <Text style={styles.ListingInfoProfileSellerName}>Oussama</Text>
+               <Text style={styles.ListingInfoProfileSellerListingName}>Listing 1</Text>
+            </View>
+         </View>
          <View style={styles.ChatMessagesContainer}>
             {messageData.messages.map((m, i) =>
                <View key={i} style={{ alignItems: (messageData.sender._id === m._id) ? "flex-end" : "flex-start" }}>
@@ -73,12 +81,12 @@ export default function ChatScreen() {
                control={control}
                rules={{ required: true }}
                render={({ field: { onChange, value } }) =>
-                  <TextInput onChangeText={onChange} value={value} placeholder='Message' placeholderTextColor={'gray'} />
+                  <TextInput style={styles.ChatInputField} onChangeText={onChange} value={value} placeholder='Message' placeholderTextColor={'gray'} />
                }
                name='message'
             />
-            <TouchableHighlight style={styles.postContainerFormButton} >
-               <Text style={styles.postContainerFormButtonText}>Post Ad</Text>
+            <TouchableHighlight style={styles.ChatSendButton} >
+               <Feather name="send" size={24} color="white" />
             </TouchableHighlight>
          </View>
       </View>
@@ -89,19 +97,50 @@ const styles = StyleSheet.create({
    ChatContainer: {
       flex: 1
    },
+   ChatListingInfoContainer: {
+      display: 'flex',
+      flexDirection: 'row',
+      padding: 9,
+      backgroundColor: "#EBEBEB",
+      borderBottomWidth: 1,
+      borderColor:"#ddd"
+   },
+
+   ListingInfoImg: {
+      width: 60,
+      height: 60,
+   },
+
+   ListingInfoProfile: {
+      display: 'flex',
+      paddingStart: 8,
+      flex: 1
+   },
+
+   ListingInfoProfileSellerName: {
+      fontWeight: '700'
+   },
+
    ChatMessagesContainer: {
       flex: 1,
-      borderWidth: 1,
-      borderColor: 'red',
-      padding: 12,
+      padding: 24,
    },
    ChatMessagesWrapper: {
       // alignItems: 'flex-start'
 
    },
    ChatInputContainer: {
-      borderWidth: 1,
-      borderColor: 'blue'
+      flexDirection: "row",
+      height:50,
+      borderTopWidth: 1,
+      borderColor:"#ddd"
+   },
+   ChatInputField:{
+      flex:1,
+      fontSize:18,
+      borderRadius: 5,
+      paddingHorizontal: 15,
+      backgroundColor: "white"
    },
    MessageContainer: {
       // flexDirection: "row-reverse",
@@ -128,6 +167,12 @@ const styles = StyleSheet.create({
    MessageBubbleText: {
       color: 'white',
       // width: "auto"
+   },
+   ChatSendButton: {
+      backgroundColor: "#c2616b",
+      justifyContent: "center",
+      alignItems: "center",
+      width: 50
    }
 
 })
