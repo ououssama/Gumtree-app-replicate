@@ -37,7 +37,7 @@ function MessageComponent(props) {
     <View style={styles.conversationItem}>
       <Image
         style={styles.conversationItemImage}
-        source={{ uri: props?.data?.imageUrl }}
+        source={{ uri: props?.image_name }}
       />
       <View style={styles.conversationItemSeller}>
         <Text style={styles.conversationItemSellerName}>Oussama</Text>
@@ -67,55 +67,58 @@ export default function MessageScreen({ navigation }) {
       const getListings = await getDocs(listingRef);
 
       // TODO: add promies to function
-      getListings.docs.forEach(async (doc, i) => {
-         const messageRef = collection(db, `Listing/${doc.id}/message`);
-         const messageQuery = query(
-              messageRef,
-              where("user_id", "==", auth.currentUser.uid)
-            );
-        
+      await new Promise((resolve) => {
+        getListings.docs.forEach(async (doc, i) => {
+           const messageRef = collection(db, `Listing/${doc.id}/message`);
+           const messageQuery = query(
+                messageRef,
+                where("user_id", "==", auth.currentUser.uid)
+              );
+          
+  
+           await getDocs(messageQuery).then((res) => {
+              res.docs.forEach(doc => {
+                 listingCollection.push(doc.ref.parent.parent.id)
+                 // conversationCollection.push(doc.id)
+                 // listingCollection.push(doc.ref.parent.parent.id)
+              })
+           })
+           
+  
+           if(getListings.docs.length-1 == i){
+             resolve(listingCollection);
+           }
+      })
 
-         await getDocs(messageQuery).then((res) => {
-            res.docs.forEach(doc => {
-               listingCollection.push(doc.ref.parent.parent.id)
-               // conversationCollection.push(doc.id)
-               // listingCollection.push(doc.ref.parent.parent.id)
-            })
-         })
          
-
-         if(getListings.docs.length-1 == i){
-            return listingCollection;
-         }
-
-         
-
         //   resolve({
         //    conversation_id: conversationCollection,
         //    Listing_id: listingCollection,
         //  });
   
     })
-      return listingCollection;
+    return listingCollection
    };
 
     const getListingsChat = async () => {
       let lisitngsData;
+      let lisitngsArray = [];
       const listingCollection = await getMessageId();
 
       console.log("Listing_id", listingCollection);
       await new Promise((resolve) => {
         const ListingRef = collection(db, `Listing`);
         getDocs(ListingRef).then((ListingsRes) => {
-          ListingsRes.docs.forEach((listingsDocs) => {
-            if (listingsDocs.id === Listing_id) resolve(listingsDocs.data());
+          ListingsRes.docs.forEach((listingsDocs, i) => {
+            if (listingCollection.includes(listingsDocs.id )) lisitngsArray.push(listingsDocs.data());
+            if (ListingsRes.docs.length-1 == i) resolve(lisitngsArray);
           });
         });
-      }).then((dataFulfilled) => {
-        lisitngsData = dataFulfilled;
-      });
+      })
 
-      return lisitngsData;
+      
+
+      return lisitngsArray;
     };
 
     const getConverstaion = async () => {
@@ -141,8 +144,9 @@ export default function MessageScreen({ navigation }) {
     };
 
     (async () => {
-      console.log("Listing msg:", await getListingsChat());
-      // setLisitingChats()
+      console.log("<======= Listing msg =======>");
+      setLisitingChats(await getListingsChat())
+      console.log(listingChats);
     })();
   }, [isFocused]);
 
@@ -150,7 +154,7 @@ export default function MessageScreen({ navigation }) {
     <>
       <View style={styles.wrapper}>
         <View style={styles.conversation}>
-          {messages.map((message, i) => (
+          {listingChats?.map((message, i) => (
             <View key={i}>
               <TouchableHighlight
                 style={{ marginVertical: 5 }}
@@ -160,9 +164,9 @@ export default function MessageScreen({ navigation }) {
                   navigation.jumpTo("Chat", { conversationId: conversationId })
                 }
               >
-                <MessageComponent data={message} />
+                <MessageComponent data={listingChats} />
               </TouchableHighlight>
-              {messages.length - 1 > i && (
+              {listingChats.length - 1 > i && (
                 <Divider style={styles.conversationDivider} />
               )}
             </View>
