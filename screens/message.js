@@ -5,18 +5,17 @@ import {
   TouchableHighlight,
   View,
 } from "react-native";
-import { Divider } from "react-native-paper";
-import { auth, db } from "../firebase/firebase";
+import { ActivityIndicator, Divider } from "react-native-paper";
+import { auth, db, storage } from "../firebase/firebase";
 import {
   getDocs,
   collection,
-  doc,
   query,
   where,
-  getDoc,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
+import { getDownloadURL, ref } from "firebase/storage";
 
 const messages = [
   {
@@ -32,16 +31,16 @@ const messages = [
 ];
 
 function MessageComponent(props) {
-  // console.log('Message screen');
+
   return (
     <View style={styles.conversationItem}>
       <Image
         style={styles.conversationItemImage}
-        source={{ uri: props?.image_name }}
+        source={{ uri: props?.data.uri}}
       />
       <View style={styles.conversationItemSeller}>
-        <Text style={styles.conversationItemSellerName}>Oussama</Text>
-        <Text style={styles.conversationItemSellerListing}>Listing 1</Text>
+        <Text style={styles.conversationItemSellerName}>{props?.data.title}</Text>
+        <Text style={styles.conversationItemSellerListing}>{props?.data.title}</Text>
         <Text style={styles.conversationItemSellerLatestMsg}>Yes</Text>
       </View>
       <View style={styles.conversationItemOption}>
@@ -100,25 +99,31 @@ export default function MessageScreen({ navigation }) {
     return listingCollection
    };
 
+   const getStorageImage = async (reference_path) => {
+    const getImageUrl = await getDownloadURL(reference_path)
+    const response = Promise.resolve(getImageUrl)
+    return response
+    // return "path"
+   }
+
     const getListingsChat = async () => {
-      let lisitngsData;
+
       let lisitngsArray = [];
       const listingCollection = await getMessageId();
-
-      console.log("Listing_id", listingCollection);
-      await new Promise((resolve) => {
-        const ListingRef = collection(db, `Listing`);
-        getDocs(ListingRef).then((ListingsRes) => {
-          ListingsRes.docs.forEach((listingsDocs, i) => {
-            if (listingCollection.includes(listingsDocs.id )) lisitngsArray.push(listingsDocs.data());
-            if (ListingsRes.docs.length-1 == i) resolve(lisitngsArray);
-          });
-        });
-      })
-
-      
-
+    
+      const ListingRef = collection(db, `Listing`);
+      const ListingsRes = await getDocs(ListingRef);
+    
+      await Promise.all(ListingsRes.docs.map(async (listingsDocs) => {
+        if (listingCollection.includes(listingsDocs.id)) {
+          const pathReference = ref(storage, `listings/images/${listingsDocs.data().image_name ?? "No_Image_Available.jpg"}`);
+          const getimg = await getStorageImage(pathReference);
+          lisitngsArray.push({ ...listingsDocs.data(), uri: getimg });
+        }
+      }));
+    
       return lisitngsArray;
+
     };
 
     const getConverstaion = async () => {
@@ -152,9 +157,16 @@ export default function MessageScreen({ navigation }) {
 
   return (
     <>
+    {
+      !listingChats?.length ? 
+      <View style={styles.Loader}>
+          <ActivityIndicator animating={true} size={34} color={'#c2616b'} />
+          <Text style={{ marginTop: 10 }}>Loading chat history... Just a moment please.</Text>
+      </View>
+          :
       <View style={styles.wrapper}>
         <View style={styles.conversation}>
-          {listingChats?.map((message, i) => (
+          {listingChats?.map((chatroom, i) => (
             <View key={i}>
               <TouchableHighlight
                 style={{ marginVertical: 5 }}
@@ -164,7 +176,7 @@ export default function MessageScreen({ navigation }) {
                   navigation.jumpTo("Chat", { conversationId: conversationId })
                 }
               >
-                <MessageComponent data={listingChats} />
+                <MessageComponent data={chatroom} id={i} />
               </TouchableHighlight>
               {listingChats.length - 1 > i && (
                 <Divider style={styles.conversationDivider} />
@@ -173,11 +185,20 @@ export default function MessageScreen({ navigation }) {
           ))}
         </View>
       </View>
+    }
+
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  Loader: {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+ },
+
   wrapper: {
     flex: 1,
     backgroundColor: "white",
