@@ -1,6 +1,8 @@
 import { Controller, useForm } from "react-hook-form"
 import { Image, StyleSheet, Text, TextInput, TouchableHighlight, View } from "react-native"
 import { Feather } from '@expo/vector-icons';
+import { auth, db } from "../firebase/firebase";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 
 const messageData =
 {
@@ -54,6 +56,7 @@ export default function ChatScreen() {
          message: ''
       }
    });
+
    return (
       <View style={styles.ChatContainer}>
          <View style={styles.ChatListingInfoContainer}>

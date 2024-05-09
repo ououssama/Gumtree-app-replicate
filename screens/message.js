@@ -7,10 +7,33 @@ import {
 } from "react-native";
 import { ActivityIndicator, Divider } from "react-native-paper";
 import { auth, db, storage } from "../firebase/firebase";
-import { getDocs, collection, query, where } from "firebase/firestore";
+import {
+  getDocs,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+} from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
 import { getDownloadURL, ref } from "firebase/storage";
+import { child, orderByChild } from "firebase/database";
+import moment from "moment/moment";
+
+moment.updateLocale('en', {
+  relativeTime: {
+      future: "in %s",
+      past: "%s ago",
+      s: "%ds",
+      ss: '%ds',
+      mm: "%dm",
+      hh: "%dh",
+      dd: "%dd",
+      MM: "%dm",
+      yy: "%dy"
+  }
+});
 
 const messages = [
   {
@@ -26,6 +49,13 @@ const messages = [
 ];
 
 function MessageComponent(props) {
+
+  const convertTimeStamp = (date) => {
+    const formateDate = new Date(date * 1000);
+    console.log(date);
+    return moment(formateDate, "YYYYMMDD").fromNow();
+}
+
   return (
     <View style={styles.conversationItem}>
       <Image
@@ -39,10 +69,10 @@ function MessageComponent(props) {
         <Text style={styles.conversationItemSellerListing}>
           {props?.data.title}
         </Text>
-        <Text style={styles.conversationItemSellerLatestMsg}>Yes</Text>
+        <Text style={styles.conversationItemSellerLatestMsg}>{props?.data.latest_message.text}</Text>
       </View>
       <View style={styles.conversationItemOption}>
-        <Text style={styles.conversationItemOptionTime}>2m</Text>
+        <Text style={styles.conversationItemOptionTime}>{convertTimeStamp(props?.data.latest_message.timestamp.seconds)}</Text>
         <Text style={styles.conversationItemOptionBadge}>10</Text>
       </View>
     </View>
@@ -101,15 +131,51 @@ export default function MessageScreen({ navigation }) {
     };
 
     const getListingsChat = async () => {
-      let lisitngsArray = [];
-      const listingCollection = await getMessageId();
+      let listingsArray = [];
+      // const listingCollection = await getMessageId();
 
       const ListingRef = collection(db, `Listing`);
       const ListingsRes = await getDocs(ListingRef);
 
       await Promise.all(
         ListingsRes.docs.map(async (listingsDocs) => {
-          if (listingCollection.includes(listingsDocs.id)) {
+          try {
+            const messageRef = collection(
+              ListingRef,
+              `${listingsDocs.id}/message`
+            );
+            const messageQuery = query(
+              messageRef,
+              where("user_id", "==", auth.currentUser.uid)
+            );
+            const messageRes = await getDocs(messageQuery);
+            if (!messageRes.empty) {
+              let latest_message;
+              await Promise.all(
+                messageRes.docs.map(async (message) => {
+                  //Todo: order listings by last message
+                  // const listingQuery = query(ListingRef, orderByChild(`${listingsDocs.id}/message/${message.id}/Conversation`))
+                  const conversationRef = collection(
+                    messageRef,
+                    `${message.id}/Conversation`
+                  );
+                  const conversationQuery = query(
+                    conversationRef,
+                    orderBy("timestamp", "desc"),
+                    limit(1)
+                  );
+                  const conversationRes = await getDocs(conversationQuery);
+                  latest_message = {
+                    message_ref: conversationRes.docs[0].id, 
+                    timestamp: conversationRes.docs[0].data().timestamp,
+                    text: conversationRes.docs[0].data().text,
+                  };
+
+                  // console.log("listingMessageTimestamps: ", listingMessageTimestamps);
+                  // console.log();
+                })
+              );
+        
             const pathReference = ref(
               storage,
               `listings/images/${
@@ -117,12 +183,23 @@ export default function MessageScreen({ navigation }) {
               }`
             );
             const getimg = await getStorageImage(pathReference);
-            lisitngsArray.push({ ...listingsDocs.data(), uri: getimg });
+            listingsArray.push({...listingsDocs.data(), uri: getimg, latest_message  });
+
+              // listingsArray.push({ ...listingsDocs.data()});
+            }
+          } catch (error) {
+            console.log(error);
           }
         })
       );
 
-      return lisitngsArray;
+      let sortData = listingsArray?.sort(
+        (a, b) =>
+          b.latest_message.timestamp.seconds -
+          a.latest_message.timestamp.seconds
+      );
+
+      return sortData;
     };
 
     const getConverstaion = async () => {
@@ -149,8 +226,9 @@ export default function MessageScreen({ navigation }) {
 
     (async () => {
       console.log("<======= Listing msg =======>");
+      // console.log(await getListingsChat());
       setLisitingChats(await getListingsChat());
-      console.log(listingChats);
+      // console.log(listingChats);
     })();
   }, [isFocused]);
 
@@ -174,11 +252,11 @@ export default function MessageScreen({ navigation }) {
                   underlayColor="#DDDDDD"
                   onPress={() =>
                     navigation.jumpTo("Chat", {
-                      conversationId: conversationId,
+                      conversationId: chatroom.id,
                     })
                   }
                 >
-                  <MessageComponent data={chatroom} id={i} />
+                  <MessageComponent data={chatroom} />
                 </TouchableHighlight>
                 {listingChats.length - 1 > i && (
                   <Divider style={styles.conversationDivider} />
