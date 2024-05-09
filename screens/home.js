@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { FontAwesome5, FontAwesome, Ionicons } from '@expo/vector-icons';
-import { addDoc, collection, collectionGroup, deleteDoc, doc, getDocs, query, snapshotEqual, where } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs, query, where } from 'firebase/firestore';
 import { getDownloadURL, ref } from 'firebase/storage';
 import { auth, db, storage } from '../firebase/firebase';
 import { useIsFocused } from '@react-navigation/native';

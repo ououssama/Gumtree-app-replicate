@@ -7,12 +7,7 @@ import {
 } from "react-native";
 import { ActivityIndicator, Divider } from "react-native-paper";
 import { auth, db, storage } from "../firebase/firebase";
-import {
-  getDocs,
-  collection,
-  query,
-  where,
-} from "firebase/firestore";
+import { getDocs, collection, query, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
 import { getDownloadURL, ref } from "firebase/storage";
@@ -31,16 +26,19 @@ const messages = [
 ];
 
 function MessageComponent(props) {
-
   return (
     <View style={styles.conversationItem}>
       <Image
         style={styles.conversationItemImage}
-        source={{ uri: props?.data.uri}}
+        source={{ uri: props?.data.uri }}
       />
       <View style={styles.conversationItemSeller}>
-        <Text style={styles.conversationItemSellerName}>{props?.data.title}</Text>
-        <Text style={styles.conversationItemSellerListing}>{props?.data.title}</Text>
+        <Text style={styles.conversationItemSellerName}>
+          {props?.data.title}
+        </Text>
+        <Text style={styles.conversationItemSellerListing}>
+          {props?.data.title}
+        </Text>
         <Text style={styles.conversationItemSellerLatestMsg}>Yes</Text>
       </View>
       <View style={styles.conversationItemOption}>
@@ -68,62 +66,63 @@ export default function MessageScreen({ navigation }) {
       // TODO: add promies to function
       await new Promise((resolve) => {
         getListings.docs.forEach(async (doc, i) => {
-           const messageRef = collection(db, `Listing/${doc.id}/message`);
-           const messageQuery = query(
-                messageRef,
-                where("user_id", "==", auth.currentUser.uid)
-              );
-          
-  
-           await getDocs(messageQuery).then((res) => {
-              res.docs.forEach(doc => {
-                 listingCollection.push(doc.ref.parent.parent.id)
-                 // conversationCollection.push(doc.id)
-                 // listingCollection.push(doc.ref.parent.parent.id)
-              })
-           })
-           
-  
-           if(getListings.docs.length-1 == i){
-             resolve(listingCollection);
-           }
-      })
+          const messageRef = collection(db, `Listing/${doc.id}/message`);
+          const messageQuery = query(
+            messageRef,
+            where("user_id", "==", auth.currentUser.uid)
+          );
 
-         
+          await getDocs(messageQuery).then((res) => {
+            res.docs.forEach((doc) => {
+              listingCollection.push(doc.ref.parent.parent.id);
+              // conversationCollection.push(doc.id)
+              // listingCollection.push(doc.ref.parent.parent.id)
+            });
+          });
+
+          if (getListings.docs.length - 1 == i) {
+            resolve(listingCollection);
+          }
+        });
+
         //   resolve({
         //    conversation_id: conversationCollection,
         //    Listing_id: listingCollection,
         //  });
-  
-    })
-    return listingCollection
-   };
+      });
+      return listingCollection;
+    };
 
-   const getStorageImage = async (reference_path) => {
-    const getImageUrl = await getDownloadURL(reference_path)
-    const response = Promise.resolve(getImageUrl)
-    return response
-    // return "path"
-   }
+    const getStorageImage = async (reference_path) => {
+      const getImageUrl = await getDownloadURL(reference_path);
+      const response = Promise.resolve(getImageUrl);
+      return response;
+      // return "path"
+    };
 
     const getListingsChat = async () => {
-
       let lisitngsArray = [];
       const listingCollection = await getMessageId();
-    
+
       const ListingRef = collection(db, `Listing`);
       const ListingsRes = await getDocs(ListingRef);
-    
-      await Promise.all(ListingsRes.docs.map(async (listingsDocs) => {
-        if (listingCollection.includes(listingsDocs.id)) {
-          const pathReference = ref(storage, `listings/images/${listingsDocs.data().image_name ?? "No_Image_Available.jpg"}`);
-          const getimg = await getStorageImage(pathReference);
-          lisitngsArray.push({ ...listingsDocs.data(), uri: getimg });
-        }
-      }));
-    
-      return lisitngsArray;
 
+      await Promise.all(
+        ListingsRes.docs.map(async (listingsDocs) => {
+          if (listingCollection.includes(listingsDocs.id)) {
+            const pathReference = ref(
+              storage,
+              `listings/images/${
+                listingsDocs.data().image_name ?? "No_Image_Available.jpg"
+              }`
+            );
+            const getimg = await getStorageImage(pathReference);
+            lisitngsArray.push({ ...listingsDocs.data(), uri: getimg });
+          }
+        })
+      );
+
+      return lisitngsArray;
     };
 
     const getConverstaion = async () => {
@@ -150,43 +149,45 @@ export default function MessageScreen({ navigation }) {
 
     (async () => {
       console.log("<======= Listing msg =======>");
-      setLisitingChats(await getListingsChat())
+      setLisitingChats(await getListingsChat());
       console.log(listingChats);
     })();
   }, [isFocused]);
 
   return (
     <>
-    {
-      !listingChats?.length ? 
-      <View style={styles.Loader}>
-          <ActivityIndicator animating={true} size={34} color={'#c2616b'} />
-          <Text style={{ marginTop: 10 }}>Loading chat history... Just a moment please.</Text>
-      </View>
-          :
-      <View style={styles.wrapper}>
-        <View style={styles.conversation}>
-          {listingChats?.map((chatroom, i) => (
-            <View key={i}>
-              <TouchableHighlight
-                style={{ marginVertical: 5 }}
-                activeOpacity={0.9}
-                underlayColor="#DDDDDD"
-                onPress={() =>
-                  navigation.jumpTo("Chat", { conversationId: conversationId })
-                }
-              >
-                <MessageComponent data={chatroom} id={i} />
-              </TouchableHighlight>
-              {listingChats.length - 1 > i && (
-                <Divider style={styles.conversationDivider} />
-              )}
-            </View>
-          ))}
+      {!listingChats?.length ? (
+        <View style={styles.Loader}>
+          <ActivityIndicator animating={true} size={34} color={"#c2616b"} />
+          <Text style={{ marginTop: 10 }}>
+            Loading chat history... Just a moment please.
+          </Text>
         </View>
-      </View>
-    }
-
+      ) : (
+        <View style={styles.wrapper}>
+          <View style={styles.conversation}>
+            {listingChats?.map((chatroom, i) => (
+              <View key={i}>
+                <TouchableHighlight
+                  style={{ marginVertical: 5 }}
+                  activeOpacity={0.9}
+                  underlayColor="#DDDDDD"
+                  onPress={() =>
+                    navigation.jumpTo("Chat", {
+                      conversationId: conversationId,
+                    })
+                  }
+                >
+                  <MessageComponent data={chatroom} id={i} />
+                </TouchableHighlight>
+                {listingChats.length - 1 > i && (
+                  <Divider style={styles.conversationDivider} />
+                )}
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
     </>
   );
 }
@@ -194,10 +195,10 @@ export default function MessageScreen({ navigation }) {
 const styles = StyleSheet.create({
   Loader: {
     flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
- },
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
   wrapper: {
     flex: 1,
