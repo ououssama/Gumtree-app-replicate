@@ -5,7 +5,6 @@ import HomeScreen from '../screens/home';
 import ProfileScreen from '../screens/profile';
 import PostScreen from '../screens/post';
 import SavedScreen from '../screens/saved';
-import MessageScreen from '../screens/message';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HeaderLayout from './headerLayout';
 // import ImagePickerExample from '../screens/test';
@@ -16,16 +15,39 @@ import { useSelector } from 'react-redux';
 import RegisterScreen from '../screens/auth/register';
 import ListingCategory from '../screens/listingCategory';
 import SearchResults from '../screens/searchResults';
-import ChatScreen from '../screens/chat';
+import MessageNavigationStack from '../screens/message';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 
 const Tab = createBottomTabNavigator();
 
 export default function TabLayout() {
     const [resetData, setResetData] = React.useState(false)
+    const [stackRoute, setStackRoute] = React.useState()
     const { isLogged } = useSelector(state => state.userData)
     const chunk = { resetData, setResetData }
     const platformOs = 'android' || 'ios'
     const tablessRoute = ['Post', 'Categories', 'Login', 'Register', 'Chat']
+
+    function getHeaderTitle(route) {
+        // If the focused route is not found, we need to assume it's the initial screen
+        // This can happen during if there hasn't been any navigation inside the screen
+        // In our case, it's "Feed" as that's the first screen inside the navigator
+        const routeName = getFocusedRouteNameFromRoute(route) ?? 'ChatRoom';
+
+        console.log(getFocusedRouteNameFromRoute(route));
+      
+        switch (routeName) {
+          case 'ChatRoom':
+            setStackRoute("ChatRoom")
+            return;
+          case 'Chat':
+            setStackRoute("Chat")
+            return;
+        default:
+            setStackRoute(routeName)
+            return;
+        }
+    }
 
     return (
         <Tab.Navigator
@@ -37,7 +59,7 @@ export default function TabLayout() {
 
 
                 header: ({ navigation, route, options }) => {
-                    return <resetForm.Provider value={chunk}><HeaderLayout headerStyle={options.headerStyle} option={route.name} navigation={navigation} /></resetForm.Provider>
+                    return stackRoute !== "Chat" && <resetForm.Provider value={chunk}>{<HeaderLayout headerStyle={options.headerStyle} option={route.name} navigation={navigation} />}</resetForm.Provider>
 
                 },
                 headerStyle: {
@@ -48,7 +70,7 @@ export default function TabLayout() {
                     flexDirection: 'row',
                     alignItems: 'center',
                     paddingHorizontal: 15,
-                    paddingTop: Platform.OS === platformOs ? 15 : 0
+                    paddingTop: Platform.OS === platformOs ? 25 : 0
                 },
                 tabBarIcon: ({ focused, color, size }) => {
                     let iconName;
@@ -85,7 +107,7 @@ export default function TabLayout() {
                 headerShown: true,
                 tabBarStyle: {
                     height: 70,
-                    display: tablessRoute.includes(route.name) ? 'none' : 'flex',
+                    display: tablessRoute.includes(route.name) || stackRoute === "Chat" ? 'none' : 'flex',
                 },
 
             })}
@@ -94,12 +116,12 @@ export default function TabLayout() {
             <Tab.Screen name="Profile" children={({ navigation }) => <UserGate navigation={navigation}><ProfileScreen /></UserGate>} />
             <Tab.Screen name="Post" children={({ navigation }) => <resetForm.Provider value={chunk}><PostScreen navigation={navigation} /></resetForm.Provider>} options={{ tabBarLabel: '', tabBarHideOnKeyboard: true }} />
             <Tab.Screen name="Saved" children={({ navigation }) => <UserGate navigation={navigation}><SavedScreen /></UserGate>} />
-            <Tab.Screen name="Message" children={({ navigation }) => <UserGate navigation={navigation}><MessageScreen navigation={navigation} /></UserGate>} />
+            <Tab.Screen name="Message" options={({route}) => getHeaderTitle(route)} children={({ navigation }) => <UserGate navigation={navigation}><MessageNavigationStack navigation={navigation} /></UserGate>} />
             <Tab.Screen name="Results" component={SearchResults} options={{ tabBarButton: () => (null) }} />
             <Tab.Screen name="Categories" component={ListingCategory} options={{ tabBarButton: () => (null) }} />
             <Tab.Screen name="Login" component={LoginScreen} options={{ tabBarButton: () => (null) }} />
             <Tab.Screen name="Register" component={RegisterScreen} options={{ tabBarButton: () => (null) }} />
-            <Tab.Screen name="Chat" component={ChatScreen} options={{ tabBarButton: () => null }} />
+            {/* <Tab.Screen name="Chat" component={ChatScreen} options={{ tabBarButton: () => null }} /> */}
 
             {/* <Tab.Screen name="test" component={ImagePickerExample} /> */}
         </Tab.Navigator>

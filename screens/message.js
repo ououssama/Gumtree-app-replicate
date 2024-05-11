@@ -1,5 +1,7 @@
 import {
   Image,
+  Platform,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableHighlight,
@@ -20,6 +22,12 @@ import { useIsFocused } from "@react-navigation/native";
 import { getDownloadURL, ref } from "firebase/storage";
 import { child, orderByChild } from "firebase/database";
 import moment from "moment/moment";
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import ChatScreen from "./chat";
+import { Ionicons } from '@expo/vector-icons';
+
+
+const stack = createNativeStackNavigator()
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -52,12 +60,12 @@ function MessageComponent(props) {
 
   const convertTimeStamp = (date) => {
     const formateDate = new Date(date * 1000);
-    console.log(date);
     return moment(formateDate, "YYYYMMDD").fromNow();
 }
 
   return (
     <View style={styles.conversationItem}>
+      {/* <Text>test</Text> */}
       <Image
         style={styles.conversationItemImage}
         source={{ uri: props?.data.uri }}
@@ -79,7 +87,7 @@ function MessageComponent(props) {
   );
 }
 
-export default function MessageScreen({ navigation }) {
+function MessageScreen({navigation}){
   const [listingChats, setLisitingChats] = useState();
   const [conversationId, setConversationId] = useState();
 
@@ -215,7 +223,7 @@ export default function MessageScreen({ navigation }) {
             getDocs(collection(db, `Message/${doc.id}/Conversation`)).then(
               (conversationRes) => {
                 conversationRes.docs.forEach((conversationDoc) => {
-                  resolve(console.log(conversationDoc.data()));
+                  resolve(conversationDoc.data());
                 });
               }
             );
@@ -225,11 +233,13 @@ export default function MessageScreen({ navigation }) {
     };
 
     (async () => {
-      console.log("<======= Listing msg =======>");
+      // console.log("<======= Listing msg =======>");
       // console.log(await getListingsChat());
       setLisitingChats(await getListingsChat());
       // console.log(listingChats);
     })();
+
+    // console.log("navigation", navigation);
   }, [isFocused]);
 
   return (
@@ -245,15 +255,14 @@ export default function MessageScreen({ navigation }) {
         <View style={styles.wrapper}>
           <View style={styles.conversation}>
             {listingChats?.map((chatroom, i) => (
-              <View key={i}>
+            
+              <View key={chatroom.id}>
                 <TouchableHighlight
                   style={{ marginVertical: 5 }}
                   activeOpacity={0.9}
                   underlayColor="#DDDDDD"
                   onPress={() =>
-                    navigation.jumpTo("Chat", {
-                      conversationId: chatroom.id,
-                    })
+                    navigation.push("Chat", {conversationId: chatroom.id})
                   }
                 >
                   <MessageComponent data={chatroom} />
@@ -262,6 +271,7 @@ export default function MessageScreen({ navigation }) {
                   <Divider style={styles.conversationDivider} />
                 )}
               </View>
+         
             ))}
           </View>
         </View>
@@ -270,7 +280,48 @@ export default function MessageScreen({ navigation }) {
   );
 }
 
+export default function MessageNavigationStack() {
+  const platformOs = 'android' || 'ios'
+  return(
+    // TODO: fix: bug in nested navigation so the child can controll the main header
+    <stack.Navigator screenOptions={{
+      // header : ({navigation, route, options}) => {
+      //   <View style={options.headerStyle} >
+      //     <Ionicons name="chevron-back" size={24} color="white" onPress={() => navigation.goBack()} />
+      //     <View style={styles.titleWrapper}><Text style={styles.title}>{route.name}</Text></View>
+      //   </View>
+      
+      // },
+      headerStyle: {
+        height: 70,
+        width: `${100}%`,
+        backgroundColor: '#39313f',
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 15,
+        paddingHorizontal: 15,
+        paddingTop: Platform.OS === platformOs ? 25 : 0
+    },
+    }}>
+      <stack.Screen name="ChatRoom" component={MessageScreen} options={{headerShown: false, tabBarButton: () => null }}/>
+      <stack.Screen name="Chat" component={ChatScreen}/>
+    </stack.Navigator>
+  )
+}
+
 const styles = StyleSheet.create({
+  titleWrapper: {
+    display: 'flex',
+    flex: 1,
+    paddingEnd: 25,
+    alignItems:'center'
+  },
+
+  title: {
+    fontSize: 18,
+    color: 'white',
+  },
   Loader: {
     flex: 1,
     display: "flex",
