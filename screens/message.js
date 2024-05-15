@@ -16,6 +16,7 @@ import {
   where,
   orderBy,
   limit,
+  limitToLast,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
@@ -27,7 +28,7 @@ import ChatScreen from "./chat";
 import { Ionicons } from '@expo/vector-icons';
 
 
-const stack = createNativeStackNavigator()
+const messageStack = createNativeStackNavigator()
 
 moment.updateLocale('en', {
   relativeTime: {
@@ -95,41 +96,40 @@ function MessageScreen({navigation}){
 
   useEffect(() => {
     //console.log("user id: ", auth.currentUser);
-    const getMessageId = async () => {
-      let listingCollection = [];
+    // const getMessageId = async () => {
+    //   let listingCollection = [];
 
-      const listingRef = collection(db, "Listing");
-      const getListings = await getDocs(listingRef);
+    //   const listingRef = collection(db, "Listing");
+    //   const getListings = await getDocs(listingRef);
 
-      // TODO: add promies to function
-      await new Promise((resolve) => {
-        getListings.docs.forEach(async (doc, i) => {
-          const messageRef = collection(db, `Listing/${doc.id}/message`);
-          const messageQuery = query(
-            messageRef,
-            where("user_id", "==", auth.currentUser.uid)
-          );
+    //   await new Promise((resolve) => {
+    //     getListings.docs.forEach(async (doc, i) => {
+    //       const messageRef = collection(db, `Listing/${doc.id}/message`);
+    //       const messageQuery = query(
+    //         messageRef,
+    //         where("user_id", "==", auth.currentUser.uid)
+    //       );
 
-          await getDocs(messageQuery).then((res) => {
-            res.docs.forEach((doc) => {
-              listingCollection.push(doc.ref.parent.parent.id);
-              // conversationCollection.push(doc.id)
-              // listingCollection.push(doc.ref.parent.parent.id)
-            });
-          });
+    //       await getDocs(messageQuery).then((res) => {
+    //         res.docs.forEach((doc) => {
+    //           listingCollection.push(doc.ref.parent.parent.id);
+    //           // conversationCollection.push(doc.id)
+    //           // listingCollection.push(doc.ref.parent.parent.id)
+    //         });
+    //       });
 
-          if (getListings.docs.length - 1 == i) {
-            resolve(listingCollection);
-          }
-        });
+    //       if (getListings.docs.length - 1 == i) {
+    //         resolve(listingCollection);
+    //       }
+    //     });
 
-        //   resolve({
-        //    conversation_id: conversationCollection,
-        //    Listing_id: listingCollection,
-        //  });
-      });
-      return listingCollection;
-    };
+    //     //   resolve({
+    //     //    conversation_id: conversationCollection,
+    //     //    Listing_id: listingCollection,
+    //     //  });
+    //   });
+    //   return listingCollection;
+    // };
 
     const getStorageImage = async (reference_path) => {
       const getImageUrl = await getDownloadURL(reference_path);
@@ -154,14 +154,13 @@ function MessageScreen({navigation}){
             );
             const messageQuery = query(
               messageRef,
-              where("user_id", "==", auth.currentUser.uid)
+              where("user.uid", "==", auth.currentUser.uid)
             );
             const messageRes = await getDocs(messageQuery);
             if (!messageRes.empty) {
               let latest_message;
               await Promise.all(
                 messageRes.docs.map(async (message) => {
-                  //Todo: order listings by last message
                   // const listingQuery = query(ListingRef, orderByChild(`${listingsDocs.id}/message/${message.id}/Conversation`))
                   const conversationRef = collection(
                     messageRef,
@@ -170,11 +169,12 @@ function MessageScreen({navigation}){
                   const conversationQuery = query(
                     conversationRef,
                     orderBy("timestamp", "desc"),
-                    limit(1)
+                    limit(1),
                   );
                   const conversationRes = await getDocs(conversationQuery);
                   latest_message = {
-                    message_ref: conversationRes.docs[0].id, 
+                    message_ref: message.id,
+                    Conversation_ref: conversationRes.docs[0].id, 
                     timestamp: conversationRes.docs[0].data().timestamp,
                     text: conversationRes.docs[0].data().text,
                   };
@@ -191,7 +191,7 @@ function MessageScreen({navigation}){
               }`
             );
             const getimg = await getStorageImage(pathReference);
-            listingsArray.push({...listingsDocs.data(), uri: getimg, latest_message  });
+            listingsArray.push({Listing_ref: listingsDocs.id, ...listingsDocs.data(), uri: getimg, latest_message  });
 
               // listingsArray.push({ ...listingsDocs.data()});
             }
@@ -208,28 +208,6 @@ function MessageScreen({navigation}){
       );
 
       return sortData;
-    };
-
-    const getConverstaion = async () => {
-      const conversationRef = collection(db, "Message");
-      const conversationId = await getMessageId();
-      const conversationQuerySnapshot = query(
-        conversationRef,
-        where("ConverstationId", "==", conversationId)
-      );
-      new Promise((resolve) => {
-        getDocs(conversationQuerySnapshot).then((res) => {
-          res.docs.forEach((doc) => {
-            getDocs(collection(db, `Message/${doc.id}/Conversation`)).then(
-              (conversationRes) => {
-                conversationRes.docs.forEach((conversationDoc) => {
-                  resolve(conversationDoc.data());
-                });
-              }
-            );
-          });
-        });
-      });
     };
 
     (async () => {
@@ -256,13 +234,13 @@ function MessageScreen({navigation}){
           <View style={styles.conversation}>
             {listingChats?.map((chatroom, i) => (
             
-              <View key={chatroom.id}>
+              <View key={chatroom.Listing_ref}>
                 <TouchableHighlight
                   style={{ marginVertical: 5 }}
                   activeOpacity={0.9}
                   underlayColor="#DDDDDD"
                   onPress={() =>
-                    navigation.push("Chat", {conversationId: chatroom.id})
+                    navigation.push("Chat", {listingId: chatroom.Listing_ref , messageId: chatroom.latest_message.message_ref, listingInfo: chatroom})
                   }
                 >
                   <MessageComponent data={chatroom} />
@@ -283,30 +261,30 @@ function MessageScreen({navigation}){
 export default function MessageNavigationStack() {
   const platformOs = 'android' || 'ios'
   return(
-    // TODO: fix: bug in nested navigation so the child can controll the main header
-    <stack.Navigator screenOptions={{
-      // header : ({navigation, route, options}) => {
-      //   <View style={options.headerStyle} >
-      //     <Ionicons name="chevron-back" size={24} color="white" onPress={() => navigation.goBack()} />
-      //     <View style={styles.titleWrapper}><Text style={styles.title}>{route.name}</Text></View>
-      //   </View>
-      
-      // },
+    // TODO: fix: bug in nested navigation therefor the child can controll the main header
+    <messageStack.Navigator screenOptions={{
+      header : ({navigation, route, options}) => {
+        return (
+        <View style={options.headerStyle} >
+          <Ionicons name="chevron-back" size={24} color="white" onPress={() => navigation.goBack()} />
+          <View style={styles.titleWrapper}><Text style={styles.title}>{route.name}</Text></View>
+        </View>
+        )
+      },
       headerStyle: {
-        height: 70,
+        height: StatusBar.currentHeight + 70,
         width: `${100}%`,
         backgroundColor: '#39313f',
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 15,
         paddingHorizontal: 15,
         paddingTop: Platform.OS === platformOs ? 25 : 0
     },
     }}>
-      <stack.Screen name="ChatRoom" component={MessageScreen} options={{headerShown: false, tabBarButton: () => null }}/>
-      <stack.Screen name="Chat" component={ChatScreen}/>
-    </stack.Navigator>
+      <messageStack.Screen name="ChatRoom" component={MessageScreen} options={{headerShown: false}}/>
+      <messageStack.Screen name="Chat" component={ChatScreen}/>
+    </messageStack.Navigator>
   )
 }
 

@@ -2,7 +2,10 @@ import { Controller, useForm } from "react-hook-form"
 import { Image, StyleSheet, Text, TextInput, TouchableHighlight, View } from "react-native"
 import { Feather } from '@expo/vector-icons';
 import { auth, db } from "../firebase/firebase";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { Timestamp, addDoc, collection, doc, getDoc, getDocs, orderBy, query, serverTimestamp } from "firebase/firestore";
+import { useIsFocused } from "@react-navigation/native";
+import { useEffect, useState } from "react";
+
 
 const messageData =
 {
@@ -50,29 +53,67 @@ const messageData =
    }
 }
 
-export default function ChatScreen() {
+export default function ChatScreen({route}) {
    const { register, setValue, handleSubmit, control, reset, formState: { errors } } = useForm({
       defaultValues: {
          message: ''
       }
    });
 
+   const [conversations, setConversations] = useState([])
+
+   const {listingId, messageId, listingInfo} = route.params
+
+   const isFocused = useIsFocused()
+
+   const getUserById = async (userId) => {
+      try {
+        const user = await firebase.auth().getUserByEmail(userId);
+        console.log('User found:', user.email);
+      } catch (error) {
+        console.log('User not found:', error);
+      }
+    };
+    
+   
+   useEffect(() => {
+
+      console.log("LisitingInfo", listingInfo);
+      const getConverstaion = async () => {
+         const conversationRef = collection(db, `Listing/${listingId}/message/${messageId}/Conversation`)
+         await new Promise(async(resolve) => {
+         const conversationQuerySnapshot = query(conversationRef, orderBy("timestamp" ))
+         const conversationDocs = await getDocs(conversationQuerySnapshot);
+            const conversation = conversationDocs.docs.map(conversation => conversation.data())
+            resolve(conversation)
+         })
+         .then(data => setConversations(data))
+         // Promise.all(conversationsSettle).then(data => setConversations(data))
+       };
+
+       (async () => {await getConverstaion()
+         // console.log("conversations", conversations);
+         console.log("Auth id",  );
+       })()
+   },[isFocused])
+
    return (
       <View style={styles.ChatContainer}>
          <View style={styles.ChatListingInfoContainer}>
          <Image style={styles.ListingInfoImg} source={{uri: "https://picsum.photos/id/237/200/300"}}></Image>
             <View style={styles.ListingInfoProfile}>
-               <Text style={styles.ListingInfoProfileSellerName}>Oussama</Text>
-               <Text style={styles.ListingInfoProfileSellerListingName}>Listing 1</Text>
+               <Text style={styles.ListingInfoProfileSellerName}>{listingInfo?.user.uid && null}</Text>
+               <Text style={styles.ListingInfoProfileSellerListingName}>{listingInfo.title}</Text>
             </View>
          </View>
          <View style={styles.ChatMessagesContainer}>
-            {messageData.messages.map((m, i) =>
-               <View key={i} style={{ alignItems: (messageData.sender._id === m._id) ? "flex-end" : "flex-start" }}>
-                  <View style={[styles.MessageContainer, { flexDirection: (messageData.sender._id === m._id) ? "row-reverse" : "row" }]}>
+            {conversations?.map((conversation, i) =>
+               // <Text>{conversation.text}</Text>
+               <View key={i} style={{ alignItems: (conversation.id === auth.currentUser.uid) ? "flex-start" : "flex-end" }}>
+                  <View style={[styles.MessageContainer, { flexDirection: (conversation.id === auth.currentUser.uid) ? "row" : "row-reverse" }]}>
                      <Image style={styles.ProfileImage} source={require("../assets/default-profile.jpg")}></Image>
-                     <View style={[styles.MessageBubbleContainer, { backgroundColor: (messageData.sender._id === m._id) ? "#d7d7d7" : "#1d7eed" }]}>
-                        <Text style={[styles.MessageBubbleText, { color: (messageData.sender._id === m._id) ? "#353535" : "white" }]}>{m.message}</Text>
+                     <View style={[styles.MessageBubbleContainer, { backgroundColor: (conversation.id === auth.currentUser.uid) ?  "#1d7eed" : "#d7d7d7" }]}>
+                        <Text style={[styles.MessageBubbleText, { color: (conversation.id === auth.currentUser.uid) ? "white" : "#353535" }]}>{conversation.text}</Text>
                      </View>
                   </View>
                </View>

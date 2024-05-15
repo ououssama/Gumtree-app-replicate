@@ -31,7 +31,7 @@ function ProfileScreen({ user_data }) {
             querySnapshot.forEach((doc) => {
                 // console.log('listings: ', doc.data())
                 const authUser = auth.currentUser.uid;
-                if (doc.data().user_uid === authUser) {
+                if (doc.data().user.uid === authUser) {
                     const pathReference = ref(storage, `listings/images/${doc.data().image_name}`);
                     getDownloadURL(pathReference).then((res) => {
                         array = [...array, ({ ...doc.data(), uri: res })]

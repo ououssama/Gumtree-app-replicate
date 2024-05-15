@@ -1,13 +1,17 @@
 import * as React from 'react'
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableHighlight, View } from 'react-native';
 import { FontAwesome5, FontAwesome, Ionicons } from '@expo/vector-icons';
 import { addDoc, collection, deleteDoc, doc, getDocs, query, where } from 'firebase/firestore';
 import { getDownloadURL, ref } from 'firebase/storage';
 import { auth, db, storage } from '../firebase/firebase';
 import { useIsFocused } from '@react-navigation/native';
 import { ActivityIndicator } from 'react-native-paper';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { LisitngScreen } from './listing';
 
-export default function HomeScreen() {
+const homeStack = createNativeStackNavigator()
+
+function HomeScreen({navigation}) {
 
    const [like, setLike] = React.useState([])
    const [listings, setListings] = React.useState([])
@@ -129,16 +133,25 @@ export default function HomeScreen() {
                   <View style={styleSheet.Listings}>
                      {
                         listings.map((listing, i) =>
-                           <View key={i} style={styleSheet.ListingsItem}>
-                              <Image style={styleSheet.ListingsItemImage} source={{
-                                 uri: listing.uri,
-                              }} />
-                              <Text style={styleSheet.ListingsItemTitle}>{listing.title}</Text>
-                              <View style={styleSheet.ListingsItemDetails}>
-                                 <View style={styleSheet.ListingsItemDetailsPrice}><Text style={styleSheet.ListingsItemDetailsPriceSymbol}>£</Text><Text style={styleSheet.ListingsItemDetailsPriceNumber}>{listing.price}</Text></View>
-                                 <Ionicons name={like.find(l => l.key === i) ? 'ios-heart' : 'ios-heart-outline'} size={34} color='#d5483f' onPress={() => toggelLike(i, listing.listingUID)} />
+                           <TouchableHighlight
+                              style={styleSheet.ListingsItem}
+                              activeOpacity={0.9}
+                              underlayColor="#DDDDDD7"
+                              onPress={() => navigation.push('Listing', {listing: listing})}
+                           >
+                              <View key={i} >
+                                 <Image style={styleSheet.ListingsItemImage} source={{
+                                    uri: listing.uri,
+                                 }} />
+                                 <Text style={styleSheet.ListingsItemTitle}>{listing.title}</Text>
+                                 <View style={styleSheet.ListingsItemDetails}>
+                                    <View style={styleSheet.ListingsItemDetailsPrice}><Text style={styleSheet.ListingsItemDetailsPriceSymbol}>£</Text><Text style={styleSheet.ListingsItemDetailsPriceNumber}>{listing.price}</Text></View>
+                                    <Ionicons name={like.find(l => l.key === i) ? 'ios-heart' : 'ios-heart-outline'} size={34} color='#d5483f' onPress={() => toggelLike(i, listing.listingUID)} />
+                                 </View>
                               </View>
-                           </View>)}
+                           </TouchableHighlight>
+                           )
+                           }
                   </View>
                </ScrollView>
             }
@@ -148,7 +161,52 @@ export default function HomeScreen() {
    );
 }
 
+export default function HomeStackNavigation() {
+   const platformOs = 'android' || 'ios'
+   return(
+      <homeStack.Navigator 
+         initialRouteName='Home'
+         
+         screenOptions={{
+            
+            header : ({navigation, route, options}) => {
+               return (
+               <View style={options.headerStyle} >
+                 <Ionicons name="chevron-back" size={24} color="white" onPress={() => navigation.goBack()} />
+                 <View style={styleSheet.titleWrapper}><Text style={styleSheet.title}>{route.name}</Text></View>
+               </View>
+               )
+             },
+            headerStyle: {
+               height: StatusBar.currentHeight + 70,
+               width: `${100}%`,
+               backgroundColor: '#39313f',
+               display: 'flex',
+               flexDirection: 'row',
+               alignItems: 'center',
+               paddingHorizontal: 15,
+               paddingTop: Platform.OS === platformOs ? 25 : 0
+           },
+         }}
+      >
+         <homeStack.Screen name="Home" component={HomeScreen} options={{headerShown: false}}/>
+         <homeStack.Screen name="Listing" component={LisitngScreen}/>
+      </homeStack.Navigator>
+   )
+} 
+
 const styleSheet = StyleSheet.create({
+   titleWrapper: {
+      display: 'flex',
+      flex: 1,
+      paddingEnd: 25,
+      alignItems:'center'
+    },
+  
+    title: {
+      fontSize: 18,
+      color: 'white',
+    },
    wrapper: {
       flex: 1,
    },

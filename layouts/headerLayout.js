@@ -3,7 +3,6 @@ import { Platform, StatusBar, StyleSheet, Text, TextInput, View } from 'react-na
 import { Ionicons } from '@expo/vector-icons';
 import { resetForm } from '../features/resetFormContext';
 import SearchComponent from '../components/searchComponent';
-import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 
 export default function HeaderLayout({option, navigation, headerStyle}) {
     const{setResetData} = React.useContext(resetForm)

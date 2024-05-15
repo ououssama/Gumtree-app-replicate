@@ -81,7 +81,7 @@ function PostScreen({ navigation, user_data, categorie_data }) {
             navigation.navigate('Login')
         } else {
             // Todo: we have to get user uid from redux store
-            const authUser = auth.currentUser.uid;
+            const authUser = auth.currentUser;
             const createdDate = new Date();
             const uniqueID = Date.now()
             try {
@@ -90,7 +90,11 @@ function PostScreen({ navigation, user_data, categorie_data }) {
                     {
                         ...data,
                         created_at: createdDate,
-                        user_uid: authUser,
+                        user: {
+                            uid: authUser.uid,
+                            image: authUser.photoURL,
+                            name: authUser.displayName
+                        },
                         image_name: image.name,
                         listingUID: uniqueID,
                     })
