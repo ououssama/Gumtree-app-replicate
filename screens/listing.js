@@ -1,4 +1,5 @@
 import {
+  Button,
   Image,
   SafeAreaView,
   StyleSheet,
@@ -7,12 +8,29 @@ import {
   TouchableHighlight,
   View,
 } from "react-native";
-import { Ionicons, Feather } from "@expo/vector-icons";
+import { Ionicons, Feather, Octicons } from "@expo/vector-icons";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { auth, db } from "../firebase/firebase";
+import { useNavigation } from "@react-navigation/native";
 
 export function LisitngScreen({ route }) {
   const { listing } = route.params;
+  const navigate = useNavigation()
+
+  const createConverstaion = async (listing_id, userId, listingInfo) => {
+    // console.log(listing_id, userId);
+    const messageRef = collection(db, `/Listing/${listing_id}/message`)
+    const messageQuery = query(messageRef, where("sender_id", "==", auth.currentUser.uid))
+    const getMessages = await getDocs(messageQuery);
+    if(!getMessages.empty) {
+      navigate.navigate("Messages", {screen: "Chat",  params: {listingId: listing_id , messageId: getMessages.docs[0].id, listingInfo: listingInfo}})
+    } else {
+
+    }
+  }
+
   return (
-    <SafeAreaView style={styles.listingContainer} >
+    <SafeAreaView style={styles.listingContainer}>
       <View style={styles.listingImageContainer}>
         <Image style={styles.listingImage} source={{ uri: listing.uri }} />
         <Ionicons
@@ -25,26 +43,59 @@ export function LisitngScreen({ route }) {
       <View style={styles.listingInfoContainer}>
         <View style={styles.listingPrimaryInfo}>
           <Text style={styles.listingPrimaryInfoTitle}>{listing.title}</Text>
-          <View style={styles.listingPrimaryInfoPrice}><Text style={styles.listingPrimaryInfoPriceLabel}>Price</Text><Text style={styles.listingPrimaryInfoPriceText}>{listing.price}£</Text></View>
+          <View style={styles.listingPrimaryInfoPrice}>
+            <Text style={styles.listingPrimaryInfoPriceLabel}>Price</Text>
+            <Text style={styles.listingPrimaryInfoPriceText}>
+              {listing.price}£
+            </Text>
+          </View>
         </View>
         <View style={styles.listingAdditionalInfo}>
           <Text style={styles.listingAdditionalInfoHeader}>Description</Text>
-          <Text style={styles.listingAdditionalInfoContent}>{listing.description}</Text>
+          <Text style={styles.listingAdditionalInfoContent}>
+            {listing.description}
+          </Text>
         </View>
         <View style={styles.listingContactInfo}>
           <Text style={styles.listingContactInfoHeader}>Contact</Text>
           <TouchableHighlight>
-            <View style={styles.listingContactInfoContent}>
-                <TextInput
-                style={styles.listingContactInfoInput}
-                value={"Say Hi"}
-                placeholder="Text"
-                editable={false}
-                />
-                <View style={styles.listingContactInfoButton}>
-                <Feather name="send" size={24} color="white" />
+            <View style={styles.listingContactInfoContentUser}>
+              <Image
+                style={styles.listingContactInfoContentUserImg}
+                source={require("../assets/default-profile.jpg")}
+              />
+              <View>
+                <View style={styles.listingContactInfoContentUserDetail}>
+                  <Text style={styles.listingContactInfoContentUserName}>
+                    {listing?.user?.displayName}
+                  </Text>
+                  <Text><Octicons name="dot-fill" size={14} color="#0BDA51" /> Online</Text>
                 </View>
+              </View>
+              <View style={styles.listingContactInfoContentButtonWrapper}>
+                <TouchableHighlight
+                  underlayColor={"#A5525B"}
+                  onPress={() => createConverstaion(listing.listingId, listing.user.uid, listing)}
+                  style={styles.listingContactInfoContentButton}
+                  // onPress={handleSubmit(onSubmit)}
+                >
+                  <Text style={styles.listingContactInfoContentButtonText}>
+                    Send Message
+                  </Text>
+                </TouchableHighlight>
+              </View>
             </View>
+            {/* <View style={styles.listingContactInfoContent}>
+                  <TextInput
+                  style={styles.listingContactInfoInput}
+                  value={"Say Hi"}
+                  placeholder="Text"
+                  editable={false}
+                  />
+                  <View style={styles.listingContactInfoButton}>
+                  <Feather name="send" size={24} color="white" />
+                  </View>
+              </View> */}
           </TouchableHighlight>
         </View>
       </View>
@@ -59,75 +110,117 @@ const styles = StyleSheet.create({
   listingImageContainer: {
     flex: 1,
   },
-  listingImage:{
+  listingImage: {
     width: "100%",
-    height: "100%"
+    height: "100%",
   },
-  listingLikeIcon:{
+  listingLikeIcon: {
     padding: 10,
     borderRadius: 100,
     position: "absolute",
     top: 0,
-    right:0,
+    right: 0,
     margin: 10,
-    backgroundColor: "white"
+    backgroundColor: "white",
   },
-  listingInfoContainer:{
+  listingInfoContainer: {
     padding: 10,
     rowGap: 10,
-    flex: 1
+    flex: 1,
   },
-  listingPrimaryInfo:{
+  listingPrimaryInfo: {
     borderRadius: 5,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: 'center',
-    backgroundColor: 'white',
-    padding: 15
+    alignItems: "center",
+    backgroundColor: "white",
+    padding: 15,
   },
   listingPrimaryInfoTitle: {
     fontSize: 24,
     maxWidth: "80%",
-    fontWeight:"600",
+    fontWeight: "600",
   },
 
-  listingPrimaryInfoPriceLabel:{
-    color: "grey"
+  listingPrimaryInfoPriceLabel: {
+    color: "grey",
   },
-  listingPrimaryInfoPriceText:{
+  listingPrimaryInfoPriceText: {
     fontSize: 24,
-    fontWeight:"600",
-    color:"#c2616b" 
-
+    fontWeight: "600",
+    color: "#c2616b",
   },
 
   listingAdditionalInfo: {
     borderRadius: 5,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     rowGap: 5,
-    padding: 15
+    padding: 15,
   },
   listingAdditionalInfoHeader: {
     fontSize: 20,
-    fontWeight:"600",
+    fontWeight: "600",
   },
-  listingContactInfo:{
+  listingContactInfo: {
     borderRadius: 5,
-    backgroundColor: 'white',
-    rowGap: 5,
-    padding: 15
+    backgroundColor: "white",
+    rowGap: 10,
+    padding: 15,
   },
 
-  listingContactInfoHeader:{
+  listingContactInfoHeader: {
     fontSize: 20,
-    fontWeight:"600",
+    fontWeight: "600",
+  },
+  listingContactInfoContentContainer: {
+    flexDirection: "row",
+    flex: 1,
+    rowGap: 15,
+  },
+  listingContactInfoContentUser: {
+    // flex: 1,
+    flexDirection: "row",
+    columnGap: 13
   },
 
-  listingContactInfoContent:{
+  listingContactInfoContentUserImg: {
+    borderRadius: 100,
+    width: 50,
+    height: 50,
+  },
+
+  listingContactInfoContentUserName: {
+    fontSize: 16,
+    marginBottom: 2,
+  },
+
+  listingContactInfoContentButtonWrapper: {
+    marginStart: "auto",
+    height: 50,
+    borderRadius: 4,
+    justifyContent: "flex-end"
+  },
+
+  listingContactInfoContentButton: {
+    paddingHorizontal: 15,
+    backgroundColor: "#c2616b",
+    borderRadius: 5,
+    // display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    height: `${100}%`,
+  },
+
+  listingContactInfoContentButtonText: {
+    color: "white",
+    fontSize: 18,
+  },
+
+  listingContactInfoContent: {
     flexDirection: "row",
     borderRadius: 5,
-    overflow: "hidden"
-  },    
+    overflow: "hidden",
+  },
 
   listingContactInfoInput: {
     flex: 1,
@@ -138,13 +231,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#EDEDED",
   },
 
-  listingContactInfoButton:{
-    backgroundColor: '#c2616b',
+  listingContactInfoButton: {
+    backgroundColor: "#c2616b",
     // borderRadius: 5,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    // display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     // height: `${100}%`
-    width: 50
-  }
+    width: 50,
+  },
 });

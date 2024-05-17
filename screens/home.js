@@ -82,7 +82,7 @@ function HomeScreen({navigation}) {
             // console.log('listings: ', doc)
             const pathReference = ref(storage, `listings/images/${doc.data().image_name}`);
             getDownloadURL(pathReference).then((res) => {
-               array = [...array, ({ ...doc.data(), uri: res })]
+               array = [...array, ({listingId: doc.id, ...doc.data(), uri: res })]
                setListings(array)
 
             }).catch((err) => {

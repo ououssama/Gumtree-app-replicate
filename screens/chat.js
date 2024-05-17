@@ -65,15 +65,6 @@ export default function ChatScreen({route}) {
    const {listingId, messageId, listingInfo} = route.params
 
    const isFocused = useIsFocused()
-
-   const getUserById = async (userId) => {
-      try {
-        const user = await firebase.auth().getUserByEmail(userId);
-        console.log('User found:', user.email);
-      } catch (error) {
-        console.log('User not found:', error);
-      }
-    };
     
    
    useEffect(() => {
@@ -93,16 +84,15 @@ export default function ChatScreen({route}) {
 
        (async () => {await getConverstaion()
          // console.log("conversations", conversations);
-         console.log("Auth id",  );
        })()
    },[isFocused])
 
    return (
       <View style={styles.ChatContainer}>
          <View style={styles.ChatListingInfoContainer}>
-         <Image style={styles.ListingInfoImg} source={{uri: "https://picsum.photos/id/237/200/300"}}></Image>
+         <Image style={styles.ListingInfoImg} source={{uri: listingInfo.uri}}></Image>
             <View style={styles.ListingInfoProfile}>
-               <Text style={styles.ListingInfoProfileSellerName}>{listingInfo?.user.uid && null}</Text>
+               <Text style={styles.ListingInfoProfileSellerName}>{listingInfo?.user.displayName}</Text>
                <Text style={styles.ListingInfoProfileSellerListingName}>{listingInfo.title}</Text>
             </View>
          </View>

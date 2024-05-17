@@ -8,14 +8,14 @@ export default function HeaderLayout({option, navigation, headerStyle}) {
     const{setResetData} = React.useContext(resetForm)
     // React.useEffect(() => console.log("stacked route", stackRoute), [])
       return (
-        <View style={[headerStyle, {height: option === 'Home' ? Platform.OS === 'android' ? StatusBar.currentHeight + 100 : 'ios' && StatusBar.currentHeight + 110 : StatusBar.currentHeight + 70}]} >
-          {option === 'Home' ?
+        <View style={[headerStyle, {height: option === 'HomeStack' ? Platform.OS === 'android' ? StatusBar.currentHeight + 100 : 'ios' && StatusBar.currentHeight + 110 : StatusBar.currentHeight + 70}]} >
+          {option === 'HomeStack' ?
               <SearchComponent navigation={navigation} />
             :
             option === 'Post' ? 
               <>
-                <Text style={styles.title} onPress={() => (setResetData(true), navigation.navigate('Home'))}>Cancel</Text>
-                <View style={[styles.titleWrapper, {paddingEnd: 50}]}><Text style={styles.title}>{option === 'Message' ? 'My Message' : option}</Text></View>
+                <Text style={styles.title} onPress={() => (setResetData(true), navigation.navigate('HomeStack'))}>Cancel</Text>
+                <View style={[styles.titleWrapper, {paddingEnd: 50}]}><Text style={styles.title}>{option}</Text></View>
                 </>
               :
             

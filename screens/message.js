@@ -154,7 +154,7 @@ function MessageScreen({navigation}){
             );
             const messageQuery = query(
               messageRef,
-              where("user.uid", "==", auth.currentUser.uid)
+              where("user_id", "==", auth.currentUser.uid)
             );
             const messageRes = await getDocs(messageQuery);
             if (!messageRes.empty) {
@@ -214,7 +214,7 @@ function MessageScreen({navigation}){
       // console.log("<======= Listing msg =======>");
       // console.log(await getListingsChat());
       setLisitingChats(await getListingsChat());
-      // console.log(listingChats);
+      console.log(listingChats);
     })();
 
     // console.log("navigation", navigation);
@@ -282,7 +282,7 @@ export default function MessageNavigationStack() {
         paddingTop: Platform.OS === platformOs ? 25 : 0
     },
     }}>
-      <messageStack.Screen name="ChatRoom" component={MessageScreen} options={{headerShown: false}}/>
+      <messageStack.Screen name="Message" component={MessageScreen} options={{headerShown: false}}/>
       <messageStack.Screen name="Chat" component={ChatScreen}/>
     </messageStack.Navigator>
   )
