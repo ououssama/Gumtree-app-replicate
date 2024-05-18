@@ -33,8 +33,6 @@ export default function TabLayout() {
   function getHeaderTitle(route) {
     const routeName = getFocusedRouteNameFromRoute(route);
 
-    console.log("routeName", routeName);
-
     switch (routeName) {
       case "Chat":
         setStackRoute("Chat");
@@ -51,11 +49,12 @@ export default function TabLayout() {
   return (
     <Tab.Navigator
       initialRouteName="HomeStack"
+      
       screenOptions={({ route }) => ({
         tabBarStyle: {
           position: "relative",
         },
-
+        
         header: ({ navigation, route, options }) => {
           return (
             <resetForm.Provider value={chunk}>
@@ -122,6 +121,7 @@ export default function TabLayout() {
       <Tab.Screen
         name="HomeStack"
         options={({ navigation, route }) => (
+          // navigation.navigate("HomeStack", {screen: "Home", initial: false}),
           navigation.isFocused() && getHeaderTitle(route),
           { tabBarLabel: "Home" }
         )}

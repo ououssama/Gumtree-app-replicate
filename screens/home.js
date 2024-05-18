@@ -40,9 +40,7 @@ function HomeScreen({navigation}) {
          const listingRef = collection(db, 'Listing');
          const listingQuery = query(listingRef, where('listingUID', '==', listingId))
          const listingDoc = (await getDocs(listingQuery)).docs[0].id
-         console.log(listingDoc);
 
-         console.log(action);
          if (action === 'ADD') {
             addDoc(collection(db, `Listing/${listingDoc}/Favorites`),
                {
@@ -137,7 +135,7 @@ function HomeScreen({navigation}) {
                               style={styleSheet.ListingsItem}
                               activeOpacity={0.9}
                               underlayColor="#DDDDDD7"
-                              onPress={() => navigation.push('Listing', {listing: listing})}
+                              onPress={() => navigation.push('Listing', { listing: listing})}
                            >
                               <View key={i} >
                                  <Image style={styleSheet.ListingsItemImage} source={{
@@ -165,13 +163,11 @@ export default function HomeStackNavigation() {
    const platformOs = 'android' || 'ios'
    return(
       <homeStack.Navigator 
-         initialRouteName='Home'
-         
+      initialRouteName='Home'
          screenOptions={{
-            
             header : ({navigation, route, options}) => {
                return (
-               <View style={options.headerStyle} >
+                  <View style={options.headerStyle} >
                  <Ionicons name="chevron-back" size={24} color="white" onPress={() => navigation.goBack()} />
                  <View style={styleSheet.titleWrapper}><Text style={styleSheet.title}>{route.name}</Text></View>
                </View>

@@ -20,7 +20,7 @@ export default function HeaderLayout({option, navigation, headerStyle}) {
               :
             
             navigation.canGoBack() && <>
-              <Ionicons name="chevron-back" size={24} color="white" onPress={() => navigation.goBack()} />
+              <Ionicons name="chevron-back" size={24} color="white" onPress={() => option === "Messages" ? navigation.navigate("HomeStack", {screen: "Home", initial: false}) : navigation.goBack()} />
               <View style={styles.titleWrapper}><Text style={styles.title}>{option}</Text></View>
             </>
           }

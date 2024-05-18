@@ -9,25 +9,64 @@ import {
   View,
 } from "react-native";
 import { Ionicons, Feather, Octicons } from "@expo/vector-icons";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  serverTimestamp,
+  where,
+} from "firebase/firestore";
 import { auth, db } from "../firebase/firebase";
 import { useNavigation } from "@react-navigation/native";
+import { useState } from "react";
 
 export function LisitngScreen({ route }) {
   const { listing } = route.params;
-  const navigate = useNavigation()
+  const navigate = useNavigation();
+  const [pathToConversation, setPathToConversation] = useState();
 
-  const createConverstaion = async (listing_id, userId, listingInfo) => {
+
+  const createConverstaion = async (listing_id, listingInfo) => {
     // console.log(listing_id, userId);
-    const messageRef = collection(db, `/Listing/${listing_id}/message`)
-    const messageQuery = query(messageRef, where("sender_id", "==", auth.currentUser.uid))
+    let messageId;
+    const messageRefPath = `/Listing/${listing_id}/message`
+    const messageRef = collection(db, messageRefPath);
+    const messageQuery = query(
+      messageRef,
+      where("sender_id", "==", auth.currentUser.uid)
+    );
     const getMessages = await getDocs(messageQuery);
-    if(!getMessages.empty) {
-      navigate.navigate("Messages", {screen: "Chat",  params: {listingId: listing_id , messageId: getMessages.docs[0].id, listingInfo: listingInfo}})
-    } else {
+    if (getMessages.empty) {
+      // TODO: add logic for new chat session
 
+        await addDoc(messageRef, {
+          sender_id: auth.currentUser.uid,
+          recipient_id: listingInfo.user.uid,
+          timestamp: serverTimestamp(),
+        })
+      .then(async(res) => {
+        console.log(res.path);
+        let getAddedMessage = await getDoc(doc(db, res.path))
+        messageId = getAddedMessage.id
+      });
+    } else {
+      messageId = getMessages.docs[0].id
     }
-  }
+
+    navigate.navigate("Messages", {
+      screen: "Chat",
+      initial: false,
+      params: {
+        listingId: listing_id,
+        messageId: messageId,
+        listingInfo: listingInfo,
+      },
+    });
+    
+  };
 
   return (
     <SafeAreaView style={styles.listingContainer}>
@@ -69,13 +108,16 @@ export function LisitngScreen({ route }) {
                   <Text style={styles.listingContactInfoContentUserName}>
                     {listing?.user?.displayName}
                   </Text>
-                  <Text><Octicons name="dot-fill" size={14} color="#0BDA51" /> Online</Text>
+                  <Text>
+                    <Octicons name="dot-fill" size={14} color="#0BDA51" />{" "}
+                    Online
+                  </Text>
                 </View>
               </View>
               <View style={styles.listingContactInfoContentButtonWrapper}>
                 <TouchableHighlight
                   underlayColor={"#A5525B"}
-                  onPress={() => createConverstaion(listing.listingId, listing.user.uid, listing)}
+                  onPress={() => createConverstaion(listing.listingId, listing)}
                   style={styles.listingContactInfoContentButton}
                   // onPress={handleSubmit(onSubmit)}
                 >
@@ -180,7 +222,7 @@ const styles = StyleSheet.create({
   listingContactInfoContentUser: {
     // flex: 1,
     flexDirection: "row",
-    columnGap: 13
+    columnGap: 13,
   },
 
   listingContactInfoContentUserImg: {
@@ -198,7 +240,7 @@ const styles = StyleSheet.create({
     marginStart: "auto",
     height: 50,
     borderRadius: 4,
-    justifyContent: "flex-end"
+    justifyContent: "flex-end",
   },
 
   listingContactInfoContentButton: {

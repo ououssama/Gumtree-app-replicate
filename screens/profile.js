@@ -35,7 +35,6 @@ function ProfileScreen({ user_data }) {
                     const pathReference = ref(storage, `listings/images/${doc.data().image_name}`);
                     getDownloadURL(pathReference).then((res) => {
                         array = [...array, ({ ...doc.data(), uri: res })]
-                        console.log('l: ', array);
                         setListings(array)
                         
                     }).catch((err) => {

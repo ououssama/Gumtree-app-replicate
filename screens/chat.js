@@ -2,89 +2,87 @@ import { Controller, useForm } from "react-hook-form"
 import { Image, StyleSheet, Text, TextInput, TouchableHighlight, View } from "react-native"
 import { Feather } from '@expo/vector-icons';
 import { auth, db } from "../firebase/firebase";
-import { Timestamp, addDoc, collection, doc, getDoc, getDocs, orderBy, query, serverTimestamp } from "firebase/firestore";
-import { useIsFocused } from "@react-navigation/native";
-import { useEffect, useState } from "react";
-
-
-const messageData =
-{
-   sender: {
-      _id: "65e4b9b931a30a8b08a0e32f",
-      firstName: "Landry",
-      lastName: "Witt",
-      image: "./../assets/default-profile.jpg",
-   },
-
-   receiver: {
-      _id: "65e4b9b91cf7b83796f62db7",
-      firstName: "Daisy",
-      lastName: "Leonard",
-      image: "../assets/default-profile.jpg",
-   },
-
-   messages: [
-      {
-         message: "laborum non velit",
-         timstamp: "Sun Mar 03 2024 18:56:09 GMT+0100 (GMT+01:00)",
-         _id: "65e4b9b931a30a8b08a0e32f",
-      },
-      {
-         message: "proident",
-         timstamp: "Sun Mar 03 2024 18:56:09 GMT+0100 (GMT+01:00)",
-         _id: "65e4b9b91cf7b83796f62db7",
-      },
-      {
-         message: "incididunt cillum consequat exercitation fugiat",
-         timstamp: "Sun Mar 03 2024 18:56:09 GMT+0100 (GMT+01:00)",
-         _id: "65e4b9b931a30a8b08a0e32f",
-      },
-      {
-         message: "sit et nostrud",
-         timstamp: "Sun Mar 03 2024 18:56:09 GMT+0100 (GMT+01:00)",
-         _id: "65e4b9b91cf7b83796f62db7",
-      }
-   ],
-   product: {
-      _id: "65e4b9b9c1013628c3800734",
-      name: "qui anim culpa",
-      description: "Magna velit qui ut esse anim.",
-      price: 6.195
-   }
-}
+import { Timestamp, addDoc, collection, doc, getDoc, getDocs, orderBy, query, serverTimestamp, where } from "firebase/firestore";
+import { useFocusEffect, useIsFocused, useNavigation } from "@react-navigation/native";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function ChatScreen({route}) {
-   const { register, setValue, handleSubmit, control, reset, formState: { errors } } = useForm({
+   const { register, setValue, handleSubmit, control, reset, formState: { errors, isSubmitSuccessful } } = useForm({
       defaultValues: {
          message: ''
       }
    });
 
+   const navigate = useNavigation()
+
    const [conversations, setConversations] = useState([])
+
+   const [elementShowUp, setElementShowUp] = useState(1)
 
    const {listingId, messageId, listingInfo} = route.params
 
    const isFocused = useIsFocused()
     
-   
+   const SendMessage = (data) => {
+      // console.log(data);
+      const conversationRef = collection(db, `/Listing/${listingId}/message/${messageId}/Conversation`)
+      addDoc(conversationRef, {
+         id: auth.currentUser.uid,
+         text: data.message,
+         timestamp: serverTimestamp(),
+         seen: false
+      })
+
+   }
+
+   const getConversation = async () => {
+      const conversationRef = collection(db, `Listing/${listingId}/message/${messageId}/Conversation`)
+      await new Promise(async(resolve) => {
+      const conversationQuerySnapshot = query(conversationRef, orderBy("timestamp" ))
+      const conversationDocs = await getDocs(conversationQuerySnapshot);
+         const conversation = conversationDocs.docs.map(conversation => conversation.data())
+         resolve(conversation)
+      })
+      .then(data => setConversations(data))
+      // Promise.all(conversationsSettle).then(data => setConversations(data))
+    };
+
+   //?  update all sent message seen value
+    const updateMessageStatus = async () => {
+      const conversationRef = collection(db, `Listing/${listingId}/message/${messageId}/Conversation`)
+      const conversationQuery = query(conversationRef, where("id", "!=", auth.currentUser.uid), where("seen", "==", false))
+      const getConversations = await getDocs(conversationQuery)
+      Promise.all(conversationQuery.docs.map(conversation => {
+         conversation
+      }))
+    }
+
    useEffect(() => {
-
-      console.log("LisitingInfo", listingInfo);
-      const getConverstaion = async () => {
-         const conversationRef = collection(db, `Listing/${listingId}/message/${messageId}/Conversation`)
-         await new Promise(async(resolve) => {
-         const conversationQuerySnapshot = query(conversationRef, orderBy("timestamp" ))
-         const conversationDocs = await getDocs(conversationQuerySnapshot);
-            const conversation = conversationDocs.docs.map(conversation => conversation.data())
-            resolve(conversation)
-         })
-         .then(data => setConversations(data))
-         // Promise.all(conversationsSettle).then(data => setConversations(data))
-       };
-
-       (async () => {await getConverstaion()
+      (async () => {await getConversation()
          // console.log("conversations", conversations);
        })()
+       reset({
+         message: ""
+       })
+   }, [isSubmitSuccessful])
+
+   useFocusEffect(
+      useCallback(() => {
+
+         return () => {
+          navigate.reset({
+            index: 0,
+            routes: [{name: 'Messages'}],
+          })
+        };
+      }, [])
+    );
+   
+   useEffect(() => {
+       (async () => {await getConversation()
+         // console.log("conversations", conversations);
+       })()
+       
    },[isFocused])
 
    return (
@@ -99,6 +97,8 @@ export default function ChatScreen({route}) {
          <View style={styles.ChatMessagesContainer}>
             {conversations?.map((conversation, i) =>
                // <Text>{conversation.text}</Text>
+               <>
+               {!conversation.seen && <><Text>Unread</Text></>} 
                <View key={i} style={{ alignItems: (conversation.id === auth.currentUser.uid) ? "flex-start" : "flex-end" }}>
                   <View style={[styles.MessageContainer, { flexDirection: (conversation.id === auth.currentUser.uid) ? "row" : "row-reverse" }]}>
                      <Image style={styles.ProfileImage} source={require("../assets/default-profile.jpg")}></Image>
@@ -107,6 +107,8 @@ export default function ChatScreen({route}) {
                      </View>
                   </View>
                </View>
+               </>
+               
             )
             }
          </View>
@@ -119,8 +121,8 @@ export default function ChatScreen({route}) {
                }
                name='message'
             />
-            <TouchableHighlight style={styles.ChatSendButton} >
-               <Feather name="send" size={24} color="white" />
+            <TouchableHighlight style={styles.ChatSendButton} onPress={handleSubmit(SendMessage)}>
+               <Feather name="send" size={28} color="white" />
             </TouchableHighlight>
          </View>
       </View>
@@ -165,7 +167,7 @@ const styles = StyleSheet.create({
    },
    ChatInputContainer: {
       flexDirection: "row",
-      height:50,
+      height:60,
       borderTopWidth: 1,
       borderColor:"#ddd"
    },
@@ -176,6 +178,7 @@ const styles = StyleSheet.create({
       paddingHorizontal: 15,
       backgroundColor: "white"
    },
+
    MessageContainer: {
       // flexDirection: "row-reverse",
       flexDirection: "row",
@@ -206,7 +209,7 @@ const styles = StyleSheet.create({
       backgroundColor: "#c2616b",
       justifyContent: "center",
       alignItems: "center",
-      width: 50
+      width: 60
    }
 
 })

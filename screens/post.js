@@ -13,7 +13,6 @@ import { ref, uploadBytes } from 'firebase/storage';
 
 function PostScreen({ navigation, user_data, categorie_data }) {
 
-    console.log(categorie_data);
 
     const [status, requestPermission] = ImagePicker.useCameraPermissions();
     const [image, setImage] = React.useState(null)
@@ -116,7 +115,6 @@ function PostScreen({ navigation, user_data, categorie_data }) {
 
         const imagePath = result.assets[0].uri 
         const imageName = imagePath.split('/').pop()
-        console.log('image ',imageName);
 
         if (!result.canceled) {
             setImage({ uri: imagePath, name: imageName });

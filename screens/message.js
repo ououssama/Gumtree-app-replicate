@@ -258,11 +258,13 @@ function MessageScreen({navigation}){
   );
 }
 
-export default function MessageNavigationStack() {
+export default function MessageNavigationStack({navigation}) {
   const platformOs = 'android' || 'ios'
+
+
   return(
     // TODO: fix: bug in nested navigation therefor the child can controll the main header
-    <messageStack.Navigator screenOptions={{
+    <messageStack.Navigator initialRouteName="Message" screenOptions={{
       header : ({navigation, route, options}) => {
         return (
         <View style={options.headerStyle} >
