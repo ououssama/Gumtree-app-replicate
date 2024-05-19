@@ -23,7 +23,7 @@ const Tab = createBottomTabNavigator();
 
 export default function TabLayout() {
   const [resetData, setResetData] = React.useState(false);
-  const [stackRoute, setStackRoute] = React.useState();
+  // const [stackRoute, setStackRoute] = React.useState();
   const { isLogged } = useSelector((state) => state.userData);
   const chunk = { resetData, setResetData };
   const platformOs = "android" || "ios";
@@ -35,14 +35,17 @@ export default function TabLayout() {
 
     switch (routeName) {
       case "Chat":
-        setStackRoute("Chat");
-        break;
+        return "Chat"
+        // setStackRoute("Chat");
+        // break;
       case "Listing":
-        setStackRoute("Listing");
-        break;
+        return "Listing"
+        // setStackRoute("Listing");
+        // break;
       default:
-        setStackRoute(routeName);
-        break;
+        return routeName
+        // setStackRoute(routeName);
+        // break;
     }
   }
 
@@ -107,12 +110,12 @@ export default function TabLayout() {
         tabBarActiveTintColor: "#c2616b",
         tabBarInactiveTintColor: "gray",
         tabBarLabelPosition: "below-icon",
-        headerShown: !routeExclude.includes(stackRoute) ? true : false,
+        headerShown: !routeExclude.includes( getHeaderTitle(route) ) ? true : false,
         tabBarStyle: {
           height: 70,
           display:
-            tablessRoute.includes(route.name) ||
-            routeExclude.includes(stackRoute)
+            tablessRoute.includes(route.name) 
+            || routeExclude.includes( getHeaderTitle(route) )
               ? "none"
               : "flex",
         },

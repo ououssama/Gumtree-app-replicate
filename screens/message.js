@@ -17,15 +17,18 @@ import {
   orderBy,
   limit,
   limitToLast,
+  or,
+  and,
+  getCountFromServer,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useIsFocused } from "@react-navigation/native";
 import { getDownloadURL, ref } from "firebase/storage";
-import { child, orderByChild } from "firebase/database";
+import { child, get, orderByChild } from "firebase/database";
 import moment from "moment/moment";
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ChatScreen from "./chat";
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons,FontAwesome } from '@expo/vector-icons';
 
 
 const messageStack = createNativeStackNavigator()
@@ -44,19 +47,6 @@ moment.updateLocale('en', {
   }
 });
 
-const messages = [
-  {
-    id: 1,
-    title: "listings 1",
-    date: "2023-09-13T13:17:40+01:00",
-    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
-    imageUrl: "https://picsum.photos/id/237/200/300",
-    price: 50,
-    currency: "£",
-    location: "Marrakech",
-  },
-];
-
 function MessageComponent(props) {
 
   const convertTimeStamp = (date) => {
@@ -72,17 +62,20 @@ function MessageComponent(props) {
         source={{ uri: props?.data.uri }}
       />
       <View style={styles.conversationItemSeller}>
-        <Text style={styles.conversationItemSellerName}>
-          {props?.data.title}
-        </Text>
-        <Text style={styles.conversationItemSellerListing}>
-          {props?.data.title}
-        </Text>
-        <Text style={styles.conversationItemSellerLatestMsg}>{props?.data.latest_message.text}</Text>
+        <View style={styles.conversationItemSellerInfo}>
+          <Text style={styles.conversationItemSellerName}>
+            {props?.data.user.displayName}
+          </Text>
+          <FontAwesome name="chevron-right" size={10} color="#9f9e9f" />
+          <Text style={styles.conversationItemSellerListing}>
+             {props?.data.title}
+          </Text>
+        </View>
+        <Text style={[styles.conversationItemSellerLatestMsg, {fontWeight: props?.data.latest_message.message_count > 0 ? "700" : "400"}]}>{props?.data.latest_message.text}</Text>
       </View>
       <View style={styles.conversationItemOption}>
         <Text style={styles.conversationItemOptionTime}>{convertTimeStamp(props?.data.latest_message.timestamp.seconds)}</Text>
-        <Text style={styles.conversationItemOptionBadge}>10</Text>
+        {props?.data.latest_message.message_count > 0 && <Text style={styles.conversationItemOptionBadge}>{props?.data.latest_message.message_count}</Text>}
       </View>
     </View>
   );
@@ -154,11 +147,14 @@ function MessageScreen({navigation}){
             );
             const messageQuery = query(
               messageRef,
-              where("user_id", "==", auth.currentUser.uid)
+              or(where("sender_id", "==", auth.currentUser.uid), where("recipient_id", "==", auth.currentUser.uid))
             );
             const messageRes = await getDocs(messageQuery);
+            // const cachMessage = await get(messageRes)
+            // console.log(cachMessage.val());
             if (!messageRes.empty) {
               let latest_message;
+              // console.log(messageRes.docs[0].data())
               await Promise.all(
                 messageRes.docs.map(async (message) => {
                   // const listingQuery = query(ListingRef, orderByChild(`${listingsDocs.id}/message/${message.id}/Conversation`))
@@ -166,6 +162,11 @@ function MessageScreen({navigation}){
                     messageRef,
                     `${message.id}/Conversation`
                   );
+                   
+                  const unreadMessagesQuery = query(conversationRef, and(where("id", "!=", auth.currentUser.uid), where("seen", "==", false)))
+                  const unreadMessageSnapshot = await getCountFromServer(unreadMessagesQuery)
+                  const unreadMessageCount = unreadMessageSnapshot.data().count
+
                   const conversationQuery = query(
                     conversationRef,
                     orderBy("timestamp", "desc"),
@@ -173,6 +174,7 @@ function MessageScreen({navigation}){
                   );
                   const conversationRes = await getDocs(conversationQuery);
                   latest_message = {
+                    message_count: unreadMessageCount,
                     message_ref: message.id,
                     Conversation_ref: conversationRes.docs[0].id, 
                     timestamp: conversationRes.docs[0].data().timestamp,
@@ -191,6 +193,7 @@ function MessageScreen({navigation}){
               }`
             );
             const getimg = await getStorageImage(pathReference);
+
             listingsArray.push({Listing_ref: listingsDocs.id, ...listingsDocs.data(), uri: getimg, latest_message  });
 
               // listingsArray.push({ ...listingsDocs.data()});
@@ -214,7 +217,6 @@ function MessageScreen({navigation}){
       // console.log("<======= Listing msg =======>");
       // console.log(await getListingsChat());
       setLisitingChats(await getListingsChat());
-      console.log(listingChats);
     })();
 
     // console.log("navigation", navigation);
@@ -263,7 +265,6 @@ export default function MessageNavigationStack({navigation}) {
 
 
   return(
-    // TODO: fix: bug in nested navigation therefor the child can controll the main header
     <messageStack.Navigator initialRouteName="Message" screenOptions={{
       header : ({navigation, route, options}) => {
         return (
@@ -312,10 +313,7 @@ const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
     backgroundColor: "white",
-  },
-
-  conversationDivider: {
-    // Styles
+    paddingHorizontal: 10
   },
 
   conversation: {
@@ -325,12 +323,12 @@ const styles = StyleSheet.create({
   conversationItem: {
     display: "flex",
     flexDirection: "row",
-    padding: 9,
+    padding: 10,
   },
 
   conversationItemImage: {
-    width: 80,
-    height: 80,
+    width: 60,
+    height: 60,
   },
 
   conversationItemSeller: {
@@ -339,12 +337,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
+  conversationItemSellerInfo: {
+    alignItems:"center",
+    gap: 7,
+    flexDirection: "row"
+  },
+
   conversationItemSellerName: {
+    fontSize: 16,
     fontWeight: "700",
   },
 
   conversationItemSellerLatestMsg: {
-    fontWeight: "700",
+    fontSize: 16,
+    marginTop: "auto",
+    marginBottom: 10,
+    // fontWeight: "700",
   },
 
   conversationItemOption: {
@@ -362,6 +370,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     paddingHorizontal: 7.5,
     borderRadius: 50,
+    alignSelf: "flex-end",
     justifyContent: "center",
     color: "white",
   },

@@ -132,12 +132,13 @@ function HomeScreen({navigation}) {
                      {
                         listings.map((listing, i) =>
                            <TouchableHighlight
+                              key={i}
                               style={styleSheet.ListingsItem}
                               activeOpacity={0.9}
                               underlayColor="#DDDDDD7"
                               onPress={() => navigation.push('Listing', { listing: listing})}
                            >
-                              <View key={i} >
+                              <View>
                                  <Image style={styleSheet.ListingsItemImage} source={{
                                     uri: listing.uri,
                                  }} />

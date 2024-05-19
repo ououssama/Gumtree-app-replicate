@@ -2,9 +2,10 @@ import { Controller, useForm } from "react-hook-form"
 import { Image, StyleSheet, Text, TextInput, TouchableHighlight, View } from "react-native"
 import { Feather } from '@expo/vector-icons';
 import { auth, db } from "../firebase/firebase";
-import { Timestamp, addDoc, collection, doc, getDoc, getDocs, orderBy, query, serverTimestamp, where } from "firebase/firestore";
+import { Timestamp, addDoc, and, collection, doc, getDoc, getDocs, orderBy, query, serverTimestamp, updateDoc, where } from "firebase/firestore";
 import { useFocusEffect, useIsFocused, useNavigation } from "@react-navigation/native";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Divider } from "react-native-paper";
 
 export default function ChatScreen({route}) {
    const { register, setValue, handleSubmit, control, reset, formState: { errors, isSubmitSuccessful } } = useForm({
@@ -47,18 +48,26 @@ export default function ChatScreen({route}) {
       // Promise.all(conversationsSettle).then(data => setConversations(data))
     };
 
-   //?  update all sent message seen value
+   //?  update message seen value
     const updateMessageStatus = async () => {
       const conversationRef = collection(db, `Listing/${listingId}/message/${messageId}/Conversation`)
-      const conversationQuery = query(conversationRef, where("id", "!=", auth.currentUser.uid), where("seen", "==", false))
+      const conversationQuery = query(conversationRef, and(where("id", "!=", auth.currentUser.uid), where("seen", "==", false)))
       const getConversations = await getDocs(conversationQuery)
-      Promise.all(conversationQuery.docs.map(conversation => {
-         conversation
-      }))
+      // console.log(getConversations.empty);
+      if(!getConversations.empty){
+         await Promise.all(getConversations.docs.map(conversation => {
+            const ConversationDocRef = doc(db, `Listing/${listingId}/message/${messageId}/Conversation/${conversation.id}`)
+            updateDoc(ConversationDocRef, {
+               seen: true
+            })
+         }))
+      }
     }
 
    useEffect(() => {
-      (async () => {await getConversation()
+      (async () => {
+         await getConversation()
+         await updateMessageStatus()
          // console.log("conversations", conversations);
        })()
        reset({
@@ -96,10 +105,9 @@ export default function ChatScreen({route}) {
          </View>
          <View style={styles.ChatMessagesContainer}>
             {conversations?.map((conversation, i) =>
-               // <Text>{conversation.text}</Text>
-               <>
-               {!conversation.seen && <><Text>Unread</Text></>} 
-               <View key={i} style={{ alignItems: (conversation.id === auth.currentUser.uid) ? "flex-start" : "flex-end" }}>
+               <Fragment key={i}>
+               {(!conversation.seen && conversations.length - i == listingInfo.latest_message.message_count) && <View style={styles.unreadMessageContainer}><Divider style={styles.unreadMessageDevider} /><Text style={styles.unreadMessageText}>Unread</Text></View>} 
+               <View style={{ alignItems: (conversation.id === auth.currentUser.uid) ? "flex-start" : "flex-end" }}>
                   <View style={[styles.MessageContainer, { flexDirection: (conversation.id === auth.currentUser.uid) ? "row" : "row-reverse" }]}>
                      <Image style={styles.ProfileImage} source={require("../assets/default-profile.jpg")}></Image>
                      <View style={[styles.MessageBubbleContainer, { backgroundColor: (conversation.id === auth.currentUser.uid) ?  "#1d7eed" : "#d7d7d7" }]}>
@@ -107,7 +115,7 @@ export default function ChatScreen({route}) {
                      </View>
                   </View>
                </View>
-               </>
+               </Fragment>
                
             )
             }
@@ -161,6 +169,20 @@ const styles = StyleSheet.create({
       flex: 1,
       padding: 24,
    },
+
+   unreadMessageText: {
+      alignSelf:"center",
+      position: "absolute",
+      top: 5,
+      color: "#9f9e9f",
+      paddingHorizontal: 5,
+      backgroundColor: "#f2f2f2"
+   },
+
+   unreadMessageContainer: {
+      paddingVertical: 15
+   },
+
    ChatMessagesWrapper: {
       // alignItems: 'flex-start'
 
